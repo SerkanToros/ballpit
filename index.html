@@ -3,22 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#03060f">
+<meta name="theme-color" content="#05070d">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Liquid Ball Pit</title>
+<title>Ball Pit v2</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   html, body {
-    height: 100%;
-    overflow: hidden;
-    background: #03060f;
-    overscroll-behavior: none;
-    touch-action: none;
-    -webkit-user-select: none;
-    user-select: none;
+    height: 100%; overflow: hidden; background: #05070d;
+    overscroll-behavior: none; touch-action: none;
+    -webkit-user-select: none; user-select: none;
     -webkit-tap-highlight-color: transparent;
     font: 400 14px/1.4 ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
     color: #cfe2ff;
@@ -26,118 +22,175 @@
 
   #stage { display: block; width: 100%; height: 100%; }
 
-  /* ---- Start gate: needed for fullscreen, wake lock and iOS sensor permission ---- */
   #gate {
-    position: fixed; inset: 0; z-index: 30;
+    position: fixed; inset: 0; z-index: 40;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 18px; padding: 32px;
-    background: radial-gradient(120% 90% at 50% 60%, #0b1a3d 0%, #03060f 70%);
-    text-align: center;
+    gap: 16px; padding: 32px; text-align: center;
+    background: radial-gradient(120% 90% at 50% 60%, #101c38 0%, #05070d 70%);
   }
-  #gate h1 {
-    font: 300 30px/1.15 ui-sans-serif, system-ui, sans-serif;
-    letter-spacing: .01em; color: #eaf3ff;
-  }
-  #gate p { max-width: 30ch; color: #7d97c4; font-size: 13px; }
+  #gate h1 { font: 300 30px/1.15 ui-sans-serif, system-ui, sans-serif; color: #eaf3ff; }
+  #gate p { max-width: 32ch; color: #7d97c4; font-size: 13px; }
   #gate button {
     margin-top: 8px; padding: 14px 34px; border: 0; border-radius: 999px;
-    background: linear-gradient(180deg, #4aa8ff, #1f56d8);
-    color: #fff; font: 600 15px/1 inherit; letter-spacing: .02em;
-    box-shadow: 0 0 34px rgba(60,150,255,.45);
+    background: linear-gradient(180deg, #5ab0ff, #2160df);
+    color: #fff; font: 600 15px/1 inherit;
+    box-shadow: 0 0 34px rgba(60,150,255,.4);
   }
   #gate.hidden { display: none; }
 
-  /* ---- Controls ---- */
   #handle {
-    position: fixed; z-index: 20;
-    left: 50%; transform: translateX(-50%);
+    position: fixed; z-index: 20; left: 50%; transform: translateX(-50%);
     bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
     width: 74px; height: 26px; border: 0; border-radius: 999px;
     background: rgba(140,180,255,.10);
     display: flex; align-items: center; justify-content: center;
     opacity: .5; transition: opacity .3s;
   }
-  #handle::after {
-    content: ""; width: 30px; height: 3px; border-radius: 2px;
-    background: #9dbcf0;
-  }
-  #handle.dim { opacity: .12; }
+  #handle::after { content: ""; width: 30px; height: 3px; border-radius: 2px; background: #9dbcf0; }
+  #handle.dim { opacity: .10; }
 
   #panel {
     position: fixed; z-index: 25; left: 0; right: 0; bottom: 0;
-    padding: 18px 20px calc(env(safe-area-inset-bottom, 0px) + 20px);
-    background: rgba(6, 12, 26, .88);
+    display: flex; flex-direction: column;
+    max-height: 84vh;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(7, 12, 24, .93);
     -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
     border-top: 1px solid rgba(120,165,255,.16);
-    border-radius: 20px 20px 0 0;
+    border-radius: 18px 18px 0 0;
     transform: translateY(105%);
-    transition: transform .32s cubic-bezier(.22,.9,.3,1);
-    max-height: 76vh; overflow-y: auto;
+    transition: transform .3s cubic-bezier(.22,.9,.3,1);
   }
   #panel.open { transform: translateY(0); }
 
-  .row { display: grid; grid-template-columns: 78px 1fr 44px; align-items: center; gap: 12px; margin-bottom: 13px; }
-  .row label { font-size: 12px; color: #85a2d2; letter-spacing: .02em; }
-  .row output { font-size: 12px; color: #d6e6ff; text-align: right; font-variant-numeric: tabular-nums; }
+  .bar { display: flex; align-items: center; gap: 7px; padding: 11px 12px 9px; flex-wrap: wrap; }
+  .bar select, .bar button { font: 500 12px/1 inherit; }
 
-  input[type=range] {
-    -webkit-appearance: none; appearance: none;
-    width: 100%; height: 26px; background: transparent;
+  select {
+    background: rgba(90,150,255,.13); color: #dce9ff; border: 1px solid rgba(120,165,255,.24);
+    border-radius: 9px; padding: 8px 9px; font: 500 12px/1 inherit; max-width: 44vw;
   }
-  input[type=range]::-webkit-slider-runnable-track {
-    height: 3px; border-radius: 2px; background: rgba(140,180,255,.22);
+  .mini {
+    border: 1px solid rgba(120,165,255,.2); border-radius: 9px;
+    background: rgba(90,150,255,.10); color: #cfe2ff; padding: 8px 10px;
   }
+  .mini.on { background: rgba(90,150,255,.34); border-color: rgba(150,200,255,.5); color: #fff; }
+  .mini.wide { flex: 1 1 auto; }
+  .spacer { flex: 1 1 auto; }
+
+  #chips {
+    display: flex; gap: 6px; padding: 0 12px 10px; overflow-x: auto;
+    scrollbar-width: none; flex: 0 0 auto;
+  }
+  #chips::-webkit-scrollbar { display: none; }
+  #chips button {
+    flex: 0 0 auto; padding: 7px 13px; border-radius: 999px;
+    border: 1px solid rgba(120,165,255,.18); background: rgba(90,150,255,.08);
+    color: #93aeda; font: 500 12px/1 inherit; white-space: nowrap;
+  }
+  #chips button.on { background: rgba(90,150,255,.34); border-color: rgba(150,200,255,.5); color: #fff; }
+
+  #rows { overflow-y: auto; padding: 2px 12px 8px; flex: 1 1 auto; -webkit-overflow-scrolling: touch; }
+
+  .row { display: grid; grid-template-columns: 92px 1fr 62px; align-items: center; gap: 9px; margin-bottom: 9px; }
+  .row > label {
+    font-size: 12px; color: #87a4d4; line-height: 1.15;
+    position: relative; padding-left: 9px;
+  }
+  .row > label::before {
+    content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+    width: 5px; height: 5px; border-radius: 50%; background: transparent;
+  }
+  .row.dirty > label::before { background: #5f9bf0; }
+  .row.dirty > label { color: #b6cdf3; }
+
+  .row input.num {
+    width: 100%; background: rgba(140,180,255,.09); border: 1px solid rgba(120,165,255,.16);
+    border-radius: 7px; color: #dce9ff; font: 500 12px/1 inherit;
+    padding: 7px 5px; text-align: center; font-variant-numeric: tabular-nums;
+    -moz-appearance: textfield;
+  }
+  .row input.num::-webkit-outer-spin-button,
+  .row input.num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .row input.num:focus { outline: none; border-color: rgba(150,200,255,.6); background: rgba(140,180,255,.16); }
+  .row select { grid-column: 2 / span 2; max-width: none; width: 100%; }
+  .row .toggle { grid-column: 2 / span 2; text-align: left; }
+
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 24px; background: transparent; }
+  input[type=range]::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: rgba(140,180,255,.22); }
   input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; appearance: none;
-    width: 20px; height: 20px; margin-top: -8.5px; border-radius: 50%;
-    background: #6cb4ff; box-shadow: 0 0 12px rgba(80,160,255,.6);
+    -webkit-appearance: none; appearance: none; width: 19px; height: 19px;
+    margin-top: -8px; border-radius: 50%; background: #6cb4ff;
+    box-shadow: 0 0 10px rgba(80,160,255,.5);
   }
   input[type=range]::-moz-range-track { height: 3px; border-radius: 2px; background: rgba(140,180,255,.22); }
-  input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border: 0; border-radius: 50%; background: #6cb4ff; }
+  input[type=range]::-moz-range-thumb { width: 19px; height: 19px; border: 0; border-radius: 50%; background: #6cb4ff; }
 
-  .buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
-  .buttons button {
-    flex: 1 1 auto; min-width: 84px; padding: 11px 12px; border: 1px solid rgba(120,165,255,.2);
-    border-radius: 11px; background: rgba(90,150,255,.10); color: #cfe2ff;
-    font: 500 12px/1 inherit; letter-spacing: .02em;
+  #io { padding: 0 12px 10px; display: none; }
+  #io.open { display: block; }
+  #io textarea {
+    width: 100%; height: 84px; resize: vertical;
+    background: rgba(0,0,0,.35); color: #b9d2f5; border: 1px solid rgba(120,165,255,.2);
+    border-radius: 9px; padding: 8px; font: 400 11px/1.35 ui-monospace, Consolas, monospace;
   }
-  .buttons button.on { background: rgba(90,150,255,.32); border-color: rgba(150,200,255,.5); color: #fff; }
+  #note { padding: 0 12px 12px; font-size: 11px; color: #5c749c; line-height: 1.5; }
 
-  #note { margin-top: 12px; font-size: 11px; color: #5c749c; line-height: 1.5; }
-  #fps { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); right: 12px; z-index: 15;
-         font-size: 11px; color: rgba(150,185,235,.4); font-variant-numeric: tabular-nums; display: none; }
-  #fps.show { display: block; }
+  #stats {
+    position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); right: 10px; z-index: 15;
+    font: 400 10px/1.5 ui-monospace, Consolas, monospace; color: rgba(150,185,235,.55);
+    text-align: right; white-space: pre; display: none; pointer-events: none;
+  }
+  #stats.show { display: block; }
+  #sensors {
+    position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); left: 10px; z-index: 15;
+    font: 400 10px/1.5 ui-monospace, Consolas, monospace; color: rgba(150,185,235,.55);
+    white-space: pre; display: none; pointer-events: none;
+  }
+  #sensors.show { display: block; }
+  #sensors b { color: #7fe0a0; font-weight: 400; }
+  #sensors i { color: #ef8080; font-style: normal; }
 </style>
 </head>
 <body>
 
 <canvas id="stage"></canvas>
-<div id="fps"></div>
+<div id="stats"></div>
+<div id="sensors"></div>
 
 <div id="gate">
-  <h1>Liquid Ball Pit</h1>
-  <p>Tilt the phone to pour the beads, shake to splash them, drag a finger to stir.</p>
+  <h1>Ball Pit</h1>
+  <p>Tilt to pour, shake to splash, drag a finger to stir. The handle at the bottom opens the tuning panel.</p>
   <button id="gate-go">Start</button>
 </div>
 
 <button id="handle" aria-label="Show controls"></button>
 
 <div id="panel">
-  <div class="row"><label for="s-count">Balls</label><input id="s-count" type="range" min="150" max="2400" step="50"><output id="o-count"></output></div>
-  <div class="row"><label for="s-size">Size</label><input id="s-size" type="range" min="0.5" max="2.2" step="0.05"><output id="o-size"></output></div>
-  <div class="row"><label for="s-grav">Gravity</label><input id="s-grav" type="range" min="0" max="2.5" step="0.05"><output id="o-grav"></output></div>
-  <div class="row"><label for="s-bounce">Bounce</label><input id="s-bounce" type="range" min="0" max="0.85" step="0.01"><output id="o-bounce"></output></div>
-  <div class="row"><label for="s-visc">Viscosity</label><input id="s-visc" type="range" min="0" max="1" step="0.01"><output id="o-visc"></output></div>
-  <div class="row"><label for="s-trail">Trails</label><input id="s-trail" type="range" min="0" max="1" step="0.02"><output id="o-trail"></output></div>
-  <div class="row"><label for="s-glow">Glow</label><input id="s-glow" type="range" min="0.2" max="1.6" step="0.05"><output id="o-glow"></output></div>
-  <div class="row"><label for="s-hue">Hue</label><input id="s-hue" type="range" min="-40" max="60" step="1"><output id="o-hue"></output></div>
-
-  <div class="buttons">
-    <button id="b-reset">Refill</button>
-    <button id="b-pause">Freeze</button>
-    <button id="b-awake">Stay awake</button>
-    <button id="b-full">Fullscreen</button>
-    <button id="b-fps">FPS</button>
+  <div class="bar">
+    <select id="preset" aria-label="Preset"></select>
+    <button class="mini" id="b-save">Save as</button>
+    <button class="mini" id="b-a">A</button>
+    <button class="mini" id="b-b">B</button>
+    <div class="spacer"></div>
+    <button class="mini" id="b-close">Close</button>
+  </div>
+  <div id="chips"></div>
+  <div id="rows"></div>
+  <div class="bar">
+    <button class="mini wide" id="b-reset">Refill</button>
+    <button class="mini wide" id="b-pause">Freeze</button>
+    <button class="mini wide" id="b-full">Fullscreen</button>
+    <button class="mini wide" id="b-awake">Awake</button>
+    <button class="mini wide" id="b-io">Config</button>
+    <button class="mini wide" id="b-defaults">Defaults</button>
+  </div>
+  <div id="io">
+    <textarea id="io-text" spellcheck="false" placeholder="Config JSON"></textarea>
+    <div class="bar" style="padding:8px 0 0">
+      <button class="mini wide" id="b-copy">Copy</button>
+      <button class="mini wide" id="b-paste">Apply</button>
+      <button class="mini wide" id="b-link">Copy link</button>
+    </div>
   </div>
   <p id="note"></p>
 </div>
@@ -145,125 +198,366 @@
 <script>
 "use strict";
 
-/* =========================================================================
-   1. Configuration
-   ========================================================================= */
+/* ===========================================================================
+   1. Parameter schema
+   ---------------------------------------------------------------------------
+   Every tunable lives here exactly once. The panel UI, the presets, the
+   serialisation and the reset behaviour are all generated from this array, so
+   adding a knob means adding one line and nothing else.
 
-const cfg = {
-  count:      600,   // number of balls
-  sizeScale:  1.0,   // multiplier on the derived base radius
-  gravity:    1.0,   // multiplier on device gravity
-  bounce:     0.30,  // wall restitution
-  viscosity:  0.55,  // 0 = bouncy ball pit, 1 = thick liquid
-  trail:      0.45,  // 1 = hard clear each frame, low = motion smear
-  glow:       1.0,   // additive sprite alpha
-  hue:        0,     // degrees of hue rotation off the blue base
-  paused:     false
+   k    key on cfg          n  label            g  group
+   t    type: num|int|bool|enum (default num)
+   min/max/step             slider bounds; the number box accepts anything and
+                            widens the slider when you type past an end
+   d    default value       u  unit hint shown in the label
+   =========================================================================== */
+
+const GROUPS = [
+  ["sim",   "Solver"],
+  ["mat",   "Material"],
+  ["box",   "Container"],
+  ["force", "Forces"],
+  ["touch", "Touch"],
+  ["look",  "Look"],
+  ["pal",   "Colour"],
+  ["dbg",   "Debug"]
+];
+
+const PARAMS = [
+  /* --- Solver ---------------------------------------------------------- */
+  {k:"timeScale",  n:"Time scale",  g:"sim", min:0,    max:2,   step:0.01, d:1},
+  {k:"substeps",   n:"Substeps",    g:"sim", t:"int", min:1,    max:8,   step:1,    d:2},
+  {k:"iterations", n:"Solver passes",g:"sim",t:"int", min:1,    max:8,   step:1,    d:2},
+  {k:"stiffness",  n:"Stiffness",   g:"sim", min:0.05, max:1,   step:0.01, d:0.9},
+  {k:"maxSpeed",   n:"Speed limit", g:"sim", min:0.5,  max:24,  step:0.1,  d:7,  u:"scr/s"},
+  {k:"rehash",     n:"Re-hash each pass", g:"sim", t:"bool", d:false},
+  {k:"hardPasses", n:"Hard separation",g:"sim", t:"int", min:0, max:16,  step:1,    d:4},
+
+  /* --- Material -------------------------------------------------------- */
+  {k:"ballSize",   n:"Ball size",   g:"mat", min:0.3,  max:3,   step:0.01, d:1},
+  {k:"sizeVar",    n:"Size spread", g:"mat", min:0,    max:0.6, step:0.01, d:0},
+  {k:"drawGap",    n:"Contact gap", g:"mat", min:0,    max:0.2, step:0.005,d:0.06},
+  {k:"bounce",     n:"Bounce",      g:"mat", min:0,    max:0.95,step:0.01, d:0.18},
+  {k:"friction",   n:"Friction",    g:"mat", min:0,    max:4,   step:0.01, d:0.4},
+  {k:"drag",       n:"Viscosity",   g:"mat", min:0,    max:6,   step:0.01, d:0.35, u:"/s"},
+  {k:"cohesion",   n:"Cohesion",    g:"mat", min:0,    max:3,   step:0.01, d:0},
+  {k:"cohesionRange",n:"Cohesion reach",g:"mat",min:0, max:1.5, step:0.01, d:0.35, u:"r"},
+  {k:"restSpeed",  n:"Rest cutoff", g:"mat", min:0,    max:0.3, step:0.001,d:0.025,u:"scr/s"},
+
+  /* --- Container ------------------------------------------------------- */
+  {k:"slabDepth",  n:"Pit depth",   g:"box", min:1,    max:16,  step:0.1,  d:4,   u:"balls"},
+  {k:"wallBounce", n:"Wall bounce", g:"box", min:0,    max:0.95,step:0.01, d:0.2},
+  {k:"wallFriction",n:"Wall grip",  g:"box", min:0,    max:1,   step:0.01, d:0.35},
+  {k:"inset",      n:"Wall inset",  g:"box", min:0,    max:0.25,step:0.005,d:0},
+
+  /* --- Forces ---------------------------------------------------------- */
+  {k:"gravity",    n:"Gravity",     g:"force", min:0,  max:4,   step:0.01, d:1},
+  {k:"gravSource", n:"Gravity from",g:"force", t:"enum", d:"device",
+     opts:[["device","Device tilt"],["fixed","Fixed angle"],["pointer","Pointer"],["orbit","Orbit"]]},
+  {k:"gravAngle",  n:"Fixed angle", g:"force", min:-180,max:180,step:1,    d:90,  u:"deg"},
+  {k:"gravZ",      n:"Fixed depth", g:"force", min:-1, max:1,   step:0.01, d:0},
+  {k:"orbitSpeed", n:"Orbit rate",  g:"force", min:0,  max:2,   step:0.01, d:0.25,u:"rev/s"},
+  {k:"tiltSmooth", n:"Tilt smoothing",g:"force",min:0, max:0.97,step:0.01, d:0.6},
+  {k:"useZ",       n:"Use device Z axis", g:"force", t:"bool", d:true},
+  {k:"shakeThresh",n:"Shake trigger",g:"force",min:1,  max:25,  step:0.1,  d:6,   u:"m/s2"},
+  {k:"shakeImpulse",n:"Shake force",g:"force", min:0,  max:6,   step:0.05, d:1.1},
+  {k:"shakeDecay", n:"Shake decay", g:"force", min:0,  max:0.97,step:0.01, d:0.6},
+
+  /* --- Touch ----------------------------------------------------------- */
+  {k:"stirRadius", n:"Stir reach",  g:"touch", min:1,  max:25,  step:0.1,  d:9,   u:"r"},
+  {k:"stirDrag",   n:"Stir pull",   g:"touch", min:0,  max:4,   step:0.01, d:1.1},
+  {k:"stirPush",   n:"Stir push",   g:"touch", min:-2, max:4,   step:0.01, d:0.5},
+
+  /* --- Look ------------------------------------------------------------ */
+  {k:"count",      n:"Balls",       g:"look", t:"int", min:50, max:4000, step:10, d:700},
+  {k:"renderMode", n:"Style",       g:"look", t:"enum", d:"matte",
+     opts:[["matte","Matte balls"],["glow","Glow (v1)"]]},
+  {k:"lightAngle", n:"Light angle", g:"look", min:-180,max:180, step:1,   d:-55, u:"deg"},
+  {k:"lightMode",  n:"Light locked to",g:"look", t:"enum", d:"screen",
+     opts:[["screen","Screen"],["world","World up"]]},
+  {k:"ambient",    n:"Ambient",     g:"look", min:0,   max:1,   step:0.01, d:0.44},
+  {k:"diffuse",    n:"Diffuse",     g:"look", min:0,   max:1.6, step:0.01, d:0.60},
+  {k:"sheen",      n:"Sheen",       g:"look", min:0,   max:1,   step:0.01, d:0},
+  {k:"edgeDark",   n:"Edge shade",  g:"look", min:0,   max:1,   step:0.01, d:0.28},
+  {k:"ao",         n:"Occlusion",   g:"look", min:0,   max:1,   step:0.01, d:0.62},
+  {k:"shadeEase",  n:"Shade easing",g:"look", min:0.01,max:1,   step:0.01, d:0.10},
+  {k:"shadows",    n:"Drop shadows",g:"look", t:"bool", d:true},
+  {k:"shadowStrength",n:"Shadow depth",g:"look",min:0, max:1,   step:0.01, d:0.5},
+  {k:"shadowOffset",n:"Shadow offset",g:"look",min:0,  max:2,   step:0.01, d:0.34, u:"r"},
+  {k:"depthDim",   n:"Depth fade",  g:"look", min:0,   max:1,   step:0.01, d:0.55},
+  {k:"perspective",n:"Perspective", g:"look", min:0,   max:0.9, step:0.01, d:0.33},
+  {k:"bgLight",    n:"Background",  g:"look", min:0,   max:1,   step:0.01, d:0.38},
+  {k:"vignette",   n:"Vignette",    g:"look", min:0,   max:1,   step:0.01, d:0.55},
+  {k:"trail",      n:"Motion smear",g:"look", min:0,   max:1,   step:0.01, d:0},
+  {k:"glowAmount", n:"Glow amount", g:"look", min:0.1, max:1.8, step:0.01, d:1},
+
+  /* --- Colour ---------------------------------------------------------- */
+  {k:"palette",    n:"Palette",     g:"pal", t:"enum", d:"mono",
+     opts:[["mono","One blue"],["ice","Ice"],["ocean","Ocean"],["aurora","Aurora"],
+           ["ember","Ember"],["rainbow","Rainbow"],["candy","Candy"]]},
+  {k:"colorSpread",n:"Colour spread",g:"pal", min:0,   max:1,   step:0.01, d:1},
+  {k:"hueShift",   n:"Hue shift",   g:"pal", min:-180, max:180, step:1,    d:0, u:"deg"},
+  {k:"satMul",     n:"Saturation",  g:"pal", min:0,    max:1.6, step:0.01, d:1},
+  {k:"lightMul",   n:"Lightness",   g:"pal", min:0.3,  max:1.7, step:0.01, d:1},
+
+  /* --- Debug ----------------------------------------------------------- */
+  {k:"showStats",  n:"Show stats",  g:"dbg", t:"bool", d:false},
+  {k:"showSensors",n:"Show sensors",g:"dbg", t:"bool", d:false}
+];
+
+const P_BY_KEY = {};
+for (const p of PARAMS) P_BY_KEY[p.k] = p;
+
+/* Presets are sparse overrides on the defaults above. */
+const PRESETS = {
+  "Ball Pit":    {},
+  "v1 Original": {renderMode:"glow", slabDepth:1, perspective:0, shadows:false, ao:0,
+                  sizeVar:0.5, bounce:0.3, friction:0, drag:0.18, cohesion:0,
+                  wallBounce:0.3, wallFriction:0.35, trail:0.55, count:600,
+                  restSpeed:0, depthDim:0, glowAmount:1, gravity:1, palette:"ice",
+                  ambient:0.26, diffuse:0.95, sheen:0.1, edgeDark:0.45, hardPasses:0, drawGap:0, iterations:3, count:600},
+  "Deep Pit":    {slabDepth:9, count:1000, ballSize:0.72, depthDim:0.72, palette:"ice",
+                  perspective:0.5, ao:0.75, shadowStrength:0.58},
+  "Water":       {friction:0.02, bounce:0.02, drag:0.9, cohesion:0.9, cohesionRange:0.5,
+                  restSpeed:0, stiffness:1, iterations:4, ballSize:0.6, count:900,
+                  palette:"ocean", sheen:0.35, ao:0.5},
+  "Wet Sand":    {friction:1.2, bounce:0, drag:1.6, cohesion:1.1, ballSize:0.45,
+                  count:1000, restSpeed:0.04, sheen:0, palette:"ember", ao:0.8},
+  "Honey":       {friction:0.8, bounce:0, drag:3.2, cohesion:1.8, cohesionRange:0.7,
+                  gravity:0.55, palette:"ember", sheen:0.3},
+  "Bouncy":      {bounce:0.82, wallBounce:0.85, friction:0.05, drag:0.06,
+                  restSpeed:0, count:500, ballSize:1.3},
+  "Zero-G":      {gravity:0.04, drag:0.04, bounce:0.6, friction:0.05, restSpeed:0,
+                  palette:"aurora", count:700},
+  "Chaos":       {gravity:2.4, bounce:0.62, friction:0.1, shakeImpulse:3,
+                  count:900, ballSize:0.7, palette:"rainbow"}
 };
 
-const SUBSTEPS   = 2;    // physics substeps per rendered frame
-const ITERATIONS = 3;    // collision relaxation passes per substep
-const MAX_BALLS  = 2400;
-const LEVELS     = 14;   // pre-rendered colour steps (deep blue -> cyan-white)
-const SPRITE_EXT = 2.3;  // sprite half-width, in ball radii (the halo)
+const cfg = {};
+for (const p of PARAMS) cfg[p.k] = p.d;
+let paused = false;
 
-/* =========================================================================
-   2. Canvas
-   ========================================================================= */
+/* ===========================================================================
+   2. Canvas and world geometry
+   ---------------------------------------------------------------------------
+   The world is a box: x across the screen, y down the screen, z into the
+   screen. z = 0 is the back wall, z = DZ the front glass. DZ is driven by the
+   "Pit depth" parameter measured in ball diameters, so depth 1 collapses the
+   simulation to a single plane and reproduces flat 2D behaviour exactly.
+   =========================================================================== */
 
 const canvas = document.getElementById("stage");
-const ctx = canvas.getContext("2d", { alpha: false });
+const ctx = canvas.getContext("2d", {alpha: false});
 
-let W = 0, H = 0, dpr = 1, baseR = 12, gravPx = 4000;
+let W = 0, H = 0, dpr = 1;
+let baseR = 12, maxR = 12, DZ = 100, gravPx = 4000;
+let boxX0 = 0, boxX1 = 0, boxY0 = 0, boxY1 = 0;
+
+function geometry() {
+  const shortSide = Math.min(W, H);
+  baseR = (shortSide / 52) * cfg.ballSize;
+  maxR  = baseR * (1 + cfg.sizeVar);
+  DZ    = Math.max(2 * maxR, cfg.slabDepth * 2 * baseR);
+  gravPx = H * 3.0;                       // gravity 1.0 in px/s^2
+  const ix = W * cfg.inset, iy = H * cfg.inset;
+  boxX0 = ix; boxX1 = W - ix;
+  boxY0 = iy; boxY1 = H - iy;
+  for (let i = 0; i < count; i++) rad[i] = baseR * radVar[i];
+}
 
 function resize() {
   const oldW = W, oldH = H;
   dpr = Math.min(window.devicePixelRatio || 1, 2);
-  W = Math.round(window.innerWidth  * dpr);
+  W = Math.round(window.innerWidth * dpr);
   H = Math.round(window.innerHeight * dpr);
   canvas.width = W; canvas.height = H;
   canvas.style.width = window.innerWidth + "px";
   canvas.style.height = window.innerHeight + "px";
 
-  // Gravity scaled to screen height so falls feel the same on any device.
-  gravPx = H * 0.45;
+  geometry();
 
-  recomputeRadius();
-
-  // Rescale existing balls instead of dumping them on rotate.
-  if (oldW && oldH && count) {
+  if (oldW && oldH && count) {              // keep the balls on rotate
     const sx = W / oldW, sy = H / oldH;
-    for (let i = 0; i < count; i++) {
-      px[i] *= sx; py[i] *= sy;
-      ox[i] *= sx; oy[i] *= sy;
-    }
+    for (let i = 0; i < count; i++) { px[i] *= sx; py[i] *= sy; }
+  } else if (count && W && H) {
+    // First real size we have ever seen. A page that booted at zero size (a
+    // hidden tab, a pane that was not composited yet) spawned every ball at
+    // the origin with radius zero, and rescaling cannot recover that.
+    spawn(count);
   }
   buildGrid();
   paintBackdrop();
 }
 
-function recomputeRadius() {
-  // ~800 balls at scale 1.0 fill roughly the lower third of the screen.
-  const shortSide = Math.min(W, H);
-  baseR = (shortSide / 52) * cfg.sizeScale;
-  for (let i = 0; i < count; i++) rad[i] = baseR * radVar[i];
+/* ===========================================================================
+   3. Colour
+   =========================================================================== */
+
+const PALETTES = {
+  ice:     [[214,.85,.34],[210,.85,.44],[205,.80,.54],[198,.75,.62],[192,.70,.72],[186,.55,.82]],
+  ocean:   [[224,.70,.30],[210,.75,.40],[196,.80,.45],[184,.70,.50],[170,.60,.55],[158,.50,.62]],
+  aurora:  [[168,.70,.45],[150,.65,.50],[190,.70,.50],[265,.60,.55],[292,.55,.60],[210,.70,.50]],
+  ember:   [[  8,.80,.45],[ 20,.85,.50],[ 32,.90,.52],[ 44,.90,.55],[ 16,.75,.40],[ 52,.80,.60]],
+  rainbow: [[  0,.75,.52],[ 45,.80,.52],[ 95,.65,.45],[175,.70,.45],[215,.75,.50],[282,.60,.55]],
+  mono:    [[212,.58,.52]],
+  candy:   [[330,.70,.60],[275,.60,.62],[190,.70,.60],[ 45,.85,.60],[350,.75,.62],[160,.60,.58]]
+};
+
+function hsl2rgb(h, s, l) {
+  h = ((h % 360) + 360) % 360 / 360;
+  if (s <= 0) { const v = Math.round(l * 255); return [v, v, v]; }
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  const f = t => {
+    t = (t + 1) % 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+  };
+  return [Math.round(f(h + 1/3) * 255), Math.round(f(h) * 255), Math.round(f(h - 1/3) * 255)];
 }
 
-/* =========================================================================
-   3. Sprites — one pre-rendered bead per speed level
-   ========================================================================= */
+let ballColors = [];      // active RGB triples, one slot per colour index
 
-let sprites = [];
+function buildColors() {
+  const base = PALETTES[cfg.palette] || PALETTES.ice;
+  // Mean hue/sat/light, used to collapse the palette when spread is low.
+  let mh = 0, ms = 0, ml = 0;
+  for (const c of base) { mh += c[0]; ms += c[1]; ml += c[2]; }
+  mh /= base.length; ms /= base.length; ml /= base.length;
 
-function hueRotate(rgb, deg) {
-  // Cheap approximate hue rotation, good enough for a palette ramp.
-  const a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
-  const m = [
-    0.213 + c * 0.787 - s * 0.213, 0.715 - c * 0.715 - s * 0.715, 0.072 - c * 0.072 + s * 0.928,
-    0.213 - c * 0.213 + s * 0.143, 0.715 + c * 0.285 + s * 0.140, 0.072 - c * 0.072 - s * 0.283,
-    0.213 - c * 0.213 - s * 0.787, 0.715 - c * 0.715 + s * 0.715, 0.072 + c * 0.928 + s * 0.072
-  ];
-  const out = [
-    rgb[0] * m[0] + rgb[1] * m[1] + rgb[2] * m[2],
-    rgb[0] * m[3] + rgb[1] * m[4] + rgb[2] * m[5],
-    rgb[0] * m[6] + rgb[1] * m[7] + rgb[2] * m[8]
-  ];
-  return out.map(v => Math.max(0, Math.min(255, Math.round(v))));
+  const t = cfg.colorSpread;
+  ballColors = base.map(c => {
+    const h = mh + (c[0] - mh) * t + cfg.hueShift;
+    const s = Math.max(0, Math.min(1, (ms + (c[1] - ms) * t) * cfg.satMul));
+    const l = Math.max(0, Math.min(1, (ml + (c[2] - ml) * t) * cfg.lightMul));
+    return hsl2rgb(h, s, l);
+  });
 }
 
-function mix(a, b, t) {
-  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+/* ===========================================================================
+   4. Sprites
+   ---------------------------------------------------------------------------
+   A ladder of Lambert-shaded spheres: one sprite per (colour, shade rung).
+   The shade rung is picked at draw time from depth plus ambient occlusion, so
+   a ball buried in the middle of the mass is genuinely darker than one riding
+   the crest of a wave. That is what gives a moving wave visible thickness.
+   =========================================================================== */
+
+const SPR = 96, NSHADE = 12, GLOW_LEVELS = 6;
+let canonSprites = [];    // [colour][shade], lit from angle 0
+let sphereSprites = [];   // the same set rotated to the live light angle
+let spriteAngle = NaN;
+let glowSprites = [];     // [colour][speed level]
+let shadowSprite = null;
+let lightX = 0, lightY = 0, lightZ = 1;
+
+function setLightVector(angleDeg) {
+  const a = angleDeg * Math.PI / 180;
+  // Light sits off to one side and slightly toward the viewer.
+  const lx = Math.cos(a) * 0.62, ly = Math.sin(a) * 0.62, lz = 0.72;
+  const m = Math.hypot(lx, ly, lz);
+  lightX = lx / m; lightY = ly / m; lightZ = lz / m;
 }
 
 function buildSprites() {
-  const S = 128, C = S / 2;
-  const slowBody = [22, 62, 200],  fastBody = [64, 210, 255];
-  const slowCore = [130, 185, 255], fastCore = [232, 250, 255];
+  setLightVector(0);            // canonical; the live angle is applied by rotation
+  const C = SPR / 2;
+  // Halfway vector between light and the viewer at (0,0,1).
+  let hx = lightX, hy = lightY, hz = lightZ + 1;
+  const hm = Math.hypot(hx, hy, hz); hx /= hm; hy /= hm; hz /= hm;
 
-  sprites = [];
-  for (let l = 0; l < LEVELS; l++) {
-    const t = l / (LEVELS - 1);
-    const body = hueRotate(mix(slowBody, fastBody, t), cfg.hue);
-    const core = hueRotate(mix(slowCore, fastCore, t), cfg.hue);
-    const halo = hueRotate(mix([10, 30, 130], [20, 110, 200], t), cfg.hue);
+  canonSprites = [];
+  for (let ci = 0; ci < ballColors.length; ci++) {
+    const col = ballColors[ci];
+    const rungs = [];
+    for (let s = 0; s < NSHADE; s++) {
+      const shade = 1 - (s / (NSHADE - 1)) * 0.78;   // 1.0 lit .. 0.22 buried
+      const cv = document.createElement("canvas");
+      cv.width = cv.height = SPR;
+      const g = cv.getContext("2d");
+      const img = g.createImageData(SPR, SPR);
+      const D = img.data;
 
-    const cv = document.createElement("canvas");
-    cv.width = cv.height = S;
-    const g = cv.getContext("2d");
+      for (let y = 0; y < SPR; y++) {
+        const dy = (y + 0.5) / C - 1;
+        for (let x = 0; x < SPR; x++) {
+          const dx = (x + 0.5) / C - 1;
+          const r2 = dx * dx + dy * dy;
+          const o = (y * SPR + x) * 4;
+          if (r2 >= 1) { D[o + 3] = 0; continue; }
+
+          const nz = Math.sqrt(1 - r2);
+          const lam = Math.max(0, dx * lightX + dy * lightY + nz * lightZ);
+          const limb = 1 - cfg.edgeDark * Math.pow(1 - nz, 1.6);
+          let f = (cfg.ambient + cfg.diffuse * lam) * limb * shade;
+
+          const nh = Math.max(0, dx * hx + dy * hy + nz * hz);
+          const spec = cfg.sheen * Math.pow(nh, 36) * 255 * shade;
+
+          D[o]     = Math.min(255, col[0] * f + spec);
+          D[o + 1] = Math.min(255, col[1] * f + spec);
+          D[o + 2] = Math.min(255, col[2] * f + spec);
+          // One-pixel antialiased rim.
+          const r = Math.sqrt(r2);
+          D[o + 3] = Math.round(255 * Math.max(0, Math.min(1, (1 - r) * C / 1.1)));
+        }
+      }
+      g.putImageData(img, 0, 0);
+      rungs.push(cv);
+    }
+    canonSprites.push(rungs);
+  }
+
+  // --- Soft dark disc used for the drop shadows -------------------------
+  shadowSprite = document.createElement("canvas");
+  shadowSprite.width = shadowSprite.height = SPR;
+  {
+    const g = shadowSprite.getContext("2d");
     const grd = g.createRadialGradient(C, C, 0, C, C, C);
-
-    // Bead edge sits at 1/SPRITE_EXT of the sprite radius; beyond that is halo.
-    const edge = 1 / SPRITE_EXT;
-    grd.addColorStop(0.00, `rgba(${core[0]},${core[1]},${core[2]},0.98)`);
-    grd.addColorStop(0.16, `rgba(${body[0]},${body[1]},${body[2]},0.90)`);
-    grd.addColorStop(edge * 0.92, `rgba(${body[0]},${body[1]},${body[2]},0.46)`);
-    grd.addColorStop(edge, `rgba(${halo[0]},${halo[1]},${halo[2]},0.22)`);
-    grd.addColorStop(0.72, `rgba(${halo[0]},${halo[1]},${halo[2]},0.055)`);
-    grd.addColorStop(1.00, `rgba(${halo[0]},${halo[1]},${halo[2]},0)`);
-
+    grd.addColorStop(0.00, "rgba(0,0,0,0.85)");
+    grd.addColorStop(0.55, "rgba(0,0,0,0.55)");
+    grd.addColorStop(0.82, "rgba(0,0,0,0.16)");
+    grd.addColorStop(1.00, "rgba(0,0,0,0)");
     g.fillStyle = grd;
-    g.fillRect(0, 0, S, S);
-    sprites.push(cv);
+    g.fillRect(0, 0, SPR, SPR);
+  }
+
+  spriteAngle = NaN;            // force the rotated set to be rebuilt
+  buildGlowSprites();
+}
+
+/* v1's additive look, kept as a switchable style. Each colour gets a ramp that
+   washes toward cyan-white as the ball moves faster. */
+function buildGlowSprites() {
+  const S = 128, C = S / 2, EXT = 2.3;
+  glowSprites = [];
+  for (let ci = 0; ci < ballColors.length; ci++) {
+    const col = ballColors[ci];
+    const ramp = [];
+    for (let l = 0; l < GLOW_LEVELS; l++) {
+      const t = l / (GLOW_LEVELS - 1);
+      const body = [col[0] + (90 - col[0]) * t, col[1] + (225 - col[1]) * t, col[2] + (255 - col[2]) * t];
+      const core = [body[0] + (255 - body[0]) * 0.72, body[1] + (255 - body[1]) * 0.72, body[2] + (255 - body[2]) * 0.72];
+      const halo = [body[0] * 0.35, body[1] * 0.45, body[2] * 0.7];
+
+      const cv = document.createElement("canvas");
+      cv.width = cv.height = S;
+      const g = cv.getContext("2d");
+      const grd = g.createRadialGradient(C, C, 0, C, C, C);
+      const edge = 1 / EXT;
+      grd.addColorStop(0.00, `rgba(${core[0]|0},${core[1]|0},${core[2]|0},0.98)`);
+      grd.addColorStop(0.16, `rgba(${body[0]|0},${body[1]|0},${body[2]|0},0.90)`);
+      grd.addColorStop(edge * 0.92, `rgba(${body[0]|0},${body[1]|0},${body[2]|0},0.46)`);
+      grd.addColorStop(edge, `rgba(${halo[0]|0},${halo[1]|0},${halo[2]|0},0.22)`);
+      grd.addColorStop(0.72, `rgba(${halo[0]|0},${halo[1]|0},${halo[2]|0},0.055)`);
+      grd.addColorStop(1.00, `rgba(${halo[0]|0},${halo[1]|0},${halo[2]|0},0)`);
+      g.fillStyle = grd;
+      g.fillRect(0, 0, S, S);
+      ramp.push(cv);
+    }
+    glowSprites.push(ramp);
   }
 }
 
@@ -272,52 +566,94 @@ function paintBackdrop() {
   backdrop = document.createElement("canvas");
   backdrop.width = W; backdrop.height = H;
   const g = backdrop.getContext("2d");
-  const grd = g.createRadialGradient(W * 0.5, H * 0.68, 0, W * 0.5, H * 0.68, Math.max(W, H) * 0.8);
-  grd.addColorStop(0, "#071129");
-  grd.addColorStop(1, "#02040c");
+  const b = cfg.bgLight;
+  const inner = `rgb(${Math.round(7 + 26 * b)},${Math.round(14 + 38 * b)},${Math.round(28 + 62 * b)})`;
+  const outer = `rgb(${Math.round(2 + 6 * b)},${Math.round(4 + 9 * b)},${Math.round(9 + 16 * b)})`;
+  const grd = g.createRadialGradient(W * 0.5, H * 0.62, 0, W * 0.5, H * 0.62,
+                                     Math.max(W, H) * (1.05 - cfg.vignette * 0.45));
+  grd.addColorStop(0, inner);
+  grd.addColorStop(1, outer);
   g.fillStyle = grd;
   g.fillRect(0, 0, W, H);
 }
 
-/* =========================================================================
-   4. Particle state (structure of arrays, Verlet integration)
-   ========================================================================= */
+/* ===========================================================================
+   5. Particle state
+   =========================================================================== */
 
-const px = new Float32Array(MAX_BALLS);   // position
-const py = new Float32Array(MAX_BALLS);
-const ox = new Float32Array(MAX_BALLS);   // previous position (implies velocity)
-const oy = new Float32Array(MAX_BALLS);
-const rad = new Float32Array(MAX_BALLS);  // actual radius in canvas px
-const radVar = new Float32Array(MAX_BALLS); // per-ball size variation, 0.75–1.25
+const MAX_BALLS = 4000;
+const px = new Float32Array(MAX_BALLS), py = new Float32Array(MAX_BALLS), pz = new Float32Array(MAX_BALLS);
+const vx = new Float32Array(MAX_BALLS), vy = new Float32Array(MAX_BALLS), vz = new Float32Array(MAX_BALLS);
+const prx = new Float32Array(MAX_BALLS), pry = new Float32Array(MAX_BALLS), prz = new Float32Array(MAX_BALLS);
+const rad = new Float32Array(MAX_BALLS), radVar = new Float32Array(MAX_BALLS);
+const colIdx = new Uint8Array(MAX_BALLS);
+const occ = new Float32Array(MAX_BALLS);      // 0..1 how buried a ball is
 let count = 0;
+
+let rngState = 1;
+function rnd() {                                // deterministic, for the self-test
+  rngState = (rngState * 1664525 + 1013904223) >>> 0;
+  return rngState / 4294967296;
+}
+
+function initBall(i) {
+  radVar[i] = 1 - cfg.sizeVar * 0.5 + rnd() * cfg.sizeVar;
+  rad[i] = baseR * radVar[i];
+  colIdx[i] = (rnd() * ballColors.length) | 0;
+}
 
 function spawn(n) {
   count = Math.min(n, MAX_BALLS);
-  const cols = Math.max(1, Math.floor(W / (baseR * 2.1)));
+  const cols = Math.max(1, Math.floor((boxX1 - boxX0) / (baseR * 2.1)));
+  const flat = DZ <= 2 * maxR + 0.001;
+  // Depth layers get a pitch WIDER than a ball, and are centred rather than
+  // spread to fill. Spreading them across the slab put adjacent layers exactly
+  // one diameter apart — a zero-clearance crystal, where any lateral pressure
+  // in the pile had nowhere to go and came out as depth interpenetration.
+  const pitch = baseR * 2.3;
+  const layers = flat ? 1 : Math.max(1, Math.floor((DZ - 2 * baseR) / pitch) + 1);
+  const zSpan = (layers - 1) * pitch;
+  const z0 = (DZ - zSpan) * 0.5;
   for (let i = 0; i < count; i++) {
-    radVar[i] = 0.75 + Math.random() * 0.5;
-    rad[i] = baseR * radVar[i];
-    const c = i % cols, r = Math.floor(i / cols);
-    px[i] = (c + 0.5 + (Math.random() - 0.5) * 0.4) * (W / cols);
-    py[i] = H * 0.06 + r * baseR * 2.05;
-    ox[i] = px[i] - (Math.random() - 0.5) * 2;
-    oy[i] = py[i];
+    initBall(i);
+    // Round robin through the depth layers first, so a shallow fill still
+    // occupies the whole pit instead of piling into the back wall.
+    const L = flat ? 0 : i % layers;
+    const slot = (i / layers) | 0;
+    const c = slot % cols, r = (slot / cols) | 0;
+    px[i] = boxX0 + (c + 0.5) * ((boxX1 - boxX0) / cols) + (rnd() - 0.5) * baseR * 0.4;
+    py[i] = boxY0 + baseR * 1.2 + r * baseR * 2.05;
+    pz[i] = flat ? DZ * 0.5 : z0 + L * pitch + (rnd() - 0.5) * pitch * 0.12;
+    if (py[i] > boxY1 - rad[i]) py[i] = boxY1 - rad[i];
+    if (pz[i] > DZ - rad[i]) pz[i] = DZ - rad[i];
+    if (pz[i] < rad[i]) pz[i] = rad[i];
+    vx[i] = (rnd() - 0.5) * baseR; vy[i] = 0; vz[i] = 0;
+    occ[i] = 0; nCount[i] = 0;
   }
 }
 
-/* =========================================================================
-   5. Spatial hash — counting sort into flat arrays, no per-frame allocation
-   ========================================================================= */
+/* ===========================================================================
+   6. Spatial hash — 3D, counting sort into flat arrays, no per-frame garbage
+   =========================================================================== */
 
-let cellSize = 1, cols = 1, rows = 1;
-let cellOf = new Int32Array(MAX_BALLS);
-let counts = null, starts = null, cursor = null, order = new Int32Array(MAX_BALLS);
+let cellSize = 1, gcols = 1, grows = 1, gdeps = 1;
+const cellOf = new Int32Array(MAX_BALLS);
+const order  = new Int32Array(MAX_BALLS);
+const nCount = new Int32Array(MAX_BALLS);     // any near neighbour: contact test for settle()
+const frontN = new Int32Array(MAX_BALLS);     // neighbours IN FRONT: how buried a ball looks
+let counts = null, starts = null, cursor = null;
 
 function buildGrid() {
-  cellSize = Math.max(4, baseR * 2.6);
-  cols = Math.max(1, Math.ceil(W / cellSize));
-  rows = Math.max(1, Math.ceil(H / cellSize));
-  const n = cols * rows;
+  cellSize = Math.max(4, maxR * 2.2);
+  // Keep the cell table bounded on very small ball sizes.
+  for (let guard = 0; guard < 24; guard++) {
+    gcols = Math.max(1, Math.ceil(W / cellSize));
+    grows = Math.max(1, Math.ceil(H / cellSize));
+    gdeps = Math.max(1, Math.ceil(DZ / cellSize));
+    if (gcols * grows * gdeps <= 400000) break;
+    cellSize *= 1.35;
+  }
+  const n = gcols * grows * gdeps;
   counts = new Int32Array(n);
   starts = new Int32Array(n + 1);
   cursor = new Int32Array(n);
@@ -325,211 +661,339 @@ function buildGrid() {
 
 function hashParticles() {
   counts.fill(0);
+  const layer = gcols * grows;
   for (let i = 0; i < count; i++) {
-    let cx = (px[i] / cellSize) | 0;
-    let cy = (py[i] / cellSize) | 0;
-    if (cx < 0) cx = 0; else if (cx >= cols) cx = cols - 1;
-    if (cy < 0) cy = 0; else if (cy >= rows) cy = rows - 1;
-    const c = cy * cols + cx;
+    let cx = (px[i] / cellSize) | 0, cy = (py[i] / cellSize) | 0, cz = (pz[i] / cellSize) | 0;
+    if (cx < 0) cx = 0; else if (cx >= gcols) cx = gcols - 1;
+    if (cy < 0) cy = 0; else if (cy >= grows) cy = grows - 1;
+    if (cz < 0) cz = 0; else if (cz >= gdeps) cz = gdeps - 1;
+    const c = cz * layer + cy * gcols + cx;
     cellOf[i] = c;
     counts[c]++;
   }
   let run = 0;
-  for (let c = 0; c < counts.length; c++) {
-    starts[c] = run;
-    cursor[c] = run;
-    run += counts[c];
-  }
+  for (let c = 0; c < counts.length; c++) { starts[c] = run; cursor[c] = run; run += counts[c]; }
   starts[counts.length] = run;
   for (let i = 0; i < count; i++) order[cursor[cellOf[i]]++] = i;
 }
 
-/* =========================================================================
-   6. Physics
-   ========================================================================= */
+/* ===========================================================================
+   7. Physics
+   ---------------------------------------------------------------------------
+   Semi-implicit integration with explicit velocities, then N relaxation passes
+   that push overlapping pairs apart. Restitution, Coulomb friction and
+   cohesion are velocity impulses applied once per substep (on the first pass);
+   the remaining passes only fix penetration. Velocities in px/s throughout, so
+   every parameter keeps its meaning when the substep count changes.
+   =========================================================================== */
 
-let gx = 0, gy = 1;            // gravity direction in screen space, unit-ish
-let stirX = 0, stirY = 0, stirActive = false, stirVX = 0, stirVY = 0;
+let gvx = 0, gvy = 1, gvz = 0;                 // gravity direction, screen space
+let stirX = 0, stirY = 0, stirVX = 0, stirVY = 0, stirActive = false;
 let shakeImpulse = 0;
+let orbitPhase = 0;
 
-function step(dt) {
-  const dt2 = dt * dt;
-  // Viscosity maps to velocity damping. Note this is applied per SUBSTEP
-  // (120x/sec), so the retained fraction has to stay very close to 1.
-  // visc 0 -> ~0.83 velocity retained per second; visc 1 -> ~0.32.
-  const damp = 1 - (0.0015 + cfg.viscosity * 0.008);
-  const ax = gx * gravPx * cfg.gravity;
-  const ay = gy * gravPx * cfg.gravity;
-  const maxStep = baseR * 0.85;
+function substep(h) {
+  const g = gravPx * cfg.gravity;
+  const keep = Math.exp(-cfg.drag * h);
+  const vMax = cfg.maxSpeed * H;
+  const stepMax = maxR * 0.8;
+  const reach = baseR * cfg.stirRadius, reach2 = reach * reach;
 
   for (let i = 0; i < count; i++) {
-    let vx = (px[i] - ox[i]) * damp;
-    let vy = (py[i] - oy[i]) * damp;
-
-    if (shakeImpulse > 0) {
-      vx += (Math.random() - 0.5) * shakeImpulse;
-      vy += (Math.random() - 0.5) * shakeImpulse;
-    }
+    let ax = gvx * g, ay = gvy * g, az = gvz * g;
 
     if (stirActive) {
       const dx = px[i] - stirX, dy = py[i] - stirY;
       const d2 = dx * dx + dy * dy;
-      const reach = baseR * 9;
-      if (d2 < reach * reach && d2 > 1) {
-        const f = (1 - Math.sqrt(d2) / reach);
-        vx += stirVX * f * 0.55 + (dx / Math.sqrt(d2)) * f * baseR * 0.16;
-        vy += stirVY * f * 0.55 + (dy / Math.sqrt(d2)) * f * baseR * 0.16;
+      if (d2 < reach2 && d2 > 1) {
+        const d = Math.sqrt(d2), f = 1 - d / reach;
+        ax += (stirVX * cfg.stirDrag + (dx / d) * baseR * cfg.stirPush * 20) * f * 60;
+        ay += (stirVY * cfg.stirDrag + (dy / d) * baseR * cfg.stirPush * 20) * f * 60;
       }
     }
 
-    ox[i] = px[i];
-    oy[i] = py[i];
+    let nvx = (vx[i] + ax * h) * keep;
+    let nvy = (vy[i] + ay * h) * keep;
+    let nvz = (vz[i] + az * h) * keep;
 
-    let nx = vx + ax * dt2;
-    let ny = vy + ay * dt2;
-    // Clamp displacement so nothing tunnels through a neighbour.
-    if (nx > maxStep) nx = maxStep; else if (nx < -maxStep) nx = -maxStep;
-    if (ny > maxStep) ny = maxStep; else if (ny < -maxStep) ny = -maxStep;
+    if (shakeImpulse > 0) {
+      const s = shakeImpulse * baseR * 26 * h * 60;   // per second, so substeps do not change the kick
+      nvx += (rnd() - 0.5) * s; nvy += (rnd() - 0.5) * s; nvz += (rnd() - 0.5) * s;
+    }
 
-    px[i] += nx;
-    py[i] += ny;
+    // One ceiling, applied to VELOCITY. v1 clamped the displacement while
+    // leaving the velocity untouched, which manufactures energy: the ball is
+    // refused the move but keeps the speed and tries again next step. The
+    // anti-tunnelling limit and the user's speed limit are the same number now,
+    // so the pile cannot be fed by a speed the solver never actually applied.
+    const capV = Math.min(vMax, stepMax / h);
+    const sp2 = nvx * nvx + nvy * nvy + nvz * nvz;
+    if (sp2 > capV * capV) { const k = capV / Math.sqrt(sp2); nvx *= k; nvy *= k; nvz *= k; }
+
+    vx[i] = nvx; vy[i] = nvy; vz[i] = nvz;
+    prx[i] = px[i]; pry[i] = py[i]; prz[i] = pz[i];   // friction needs the substep displacement
+    px[i] += nvx * h; py[i] += nvy * h; pz[i] += nvz * h;
   }
 
-  shakeImpulse *= 0.6;
-  if (shakeImpulse < 0.05) shakeImpulse = 0;
+  const passes = Math.max(1, cfg.iterations | 0);
+  nCount.fill(0, 0, count);
+  frontN.fill(0, 0, count);
+  hashParticles();
+  for (let k = 0; k < passes; k++) {
+    if (k > 0 && cfg.rehash) hashParticles();
+    contacts(k === 0, h, (k & 1) === 1);
+    walls(k === 0);
+  }
 
-  for (let k = 0; k < ITERATIONS; k++) {
-    hashParticles();
-    collide();
-    walls();
+  /* Hard separation: positional only, full stiffness, no impulses and no
+     friction. The main passes are deliberately compliant — that is what makes
+     the material feel soft — but compliance shows up as balls visibly sunk
+     into each other. These extra passes push the residual overlap out without
+     touching a single velocity, so the look tightens up and the feel does not
+     change. Gauss-Seidel, so each pass roughly halves what is left. */
+  const hard = cfg.hardPasses | 0;
+  for (let k = 0; k < hard; k++) {
+    contacts(false, h, (k & 1) === 0, true);
+    walls(false);
+  }
+  settle(h);
+
+  if (shakeImpulse > 0) {                      // decays on physics time, not frames
+    shakeImpulse *= Math.exp(-shakeDecayRate() * h);
+    if (shakeImpulse < 0.002) shakeImpulse = 0;
   }
 }
 
-function collide() {
-  const stiffness = 0.82;
-  for (let a = 0; a < count; a++) {
+function contacts(impulse, h, reverse, hard) {
+  const stiff = hard ? 1 : cfg.stiffness;
+  const rest = cfg.bounce, mu = hard ? 0 : cfg.friction;
+  const coh = hard ? 0 : cfg.cohesion * gravPx * 0.09;
+  const cohR = hard ? 0 : cfg.cohesionRange;
+  const layer = gcols * grows;
+
+  // Sweep in spatial order and flip direction each pass. A Gauss-Seidel solver
+  // carries pressure only in the direction it sweeps, so a one-way sweep leaves
+  // the bottom of a pile bearing the whole stack; alternating fixes that without
+  // knowing which way gravity currently points.
+  for (let oi = 0; oi < count; oi++) {
+    const a = order[reverse ? count - 1 - oi : oi];
     const c = cellOf[a];
-    const cx = c % cols, cy = (c / cols) | 0;
-    const ra = rad[a], ma = ra * ra;
+    const cz = (c / layer) | 0, rem = c - cz * layer;
+    const cy = (rem / gcols) | 0, cx = rem - cy * gcols;
+    const ra = rad[a], ima = 1 / (ra * ra * ra);
 
-    for (let ny = cy - 1; ny <= cy + 1; ny++) {
-      if (ny < 0 || ny >= rows) continue;
-      const rowBase = ny * cols;
-      for (let nx = cx - 1; nx <= cx + 1; nx++) {
-        if (nx < 0 || nx >= cols) continue;
-        const cell = rowBase + nx;
-        const end = starts[cell + 1];
-        for (let k = starts[cell]; k < end; k++) {
-          const b = order[k];
-          if (b <= a) continue;
+    for (let z = cz - 1; z <= cz + 1; z++) {
+      if (z < 0 || z >= gdeps) continue;
+      for (let y = cy - 1; y <= cy + 1; y++) {
+        if (y < 0 || y >= grows) continue;
+        const rowBase = z * layer + y * gcols;
+        for (let x = cx - 1; x <= cx + 1; x++) {
+          if (x < 0 || x >= gcols) continue;
+          const cell = rowBase + x;
+          const end = starts[cell + 1];
+          for (let k = starts[cell]; k < end; k++) {
+            const b = order[k];
+            if (b <= a) continue;
 
-          const dx = px[b] - px[a];
-          const dy = py[b] - py[a];
-          const minD = ra + rad[b];
-          const d2 = dx * dx + dy * dy;
-          if (d2 >= minD * minD || d2 < 1e-6) continue;
+            let dx = px[b] - px[a], dy = py[b] - py[a], dz = pz[b] - pz[a];
+            const rb = rad[b], minD = ra + rb;
+            const d2 = dx * dx + dy * dy + dz * dz;
+            const far = minD * (1 + cohR);
+            if (d2 >= far * far) continue;
 
-          const d = Math.sqrt(d2);
-          const corr = (minD - d) * stiffness;
-          const inx = dx / d, iny = dy / d;
-          const mb = rad[b] * rad[b];
-          const tot = ma + mb;
-          const sa = corr * (mb / tot), sb = corr * (ma / tot);
+            let d = Math.sqrt(d2);
+            if (d < 1e-5) { dx = 1e-5; dy = 0; dz = 0; d = 1e-5; }
+            const nx = dx / d, ny = dy / d, nz = dz / d;
+            const imb = 1 / (rb * rb * rb);
+            const wsum = ima + imb;
 
-          px[a] -= inx * sa; py[a] -= iny * sa;
-          px[b] += inx * sb; py[b] += iny * sb;
+            if (impulse) {
+              nCount[a]++; nCount[b]++;
+              // Occlusion counts only neighbours actually touching AND in front.
+              // Counting every neighbour inside the cohesion reach saturated the
+              // measure — nearly every ball read as fully buried, so the whole
+              // pit drew at the dark end of the ladder and a wave had no relief.
+              if (d < minD * 1.15) { if (pz[b] > pz[a]) frontN[a]++; else frontN[b]++; }
+            }
+
+            if (d >= minD) {                       // in cohesion range, not touching
+              if (coh > 0 && impulse) {
+                const f = 1 - (d - minD) / (minD * cohR + 1e-6);
+                const dv = coh * f * h;
+                vx[a] += nx * dv; vy[a] += ny * dv; vz[a] += nz * dv;
+                vx[b] -= nx * dv; vy[b] -= ny * dv; vz[b] -= nz * dv;
+              }
+              continue;
+            }
+
+            /* --- separate ------------------------------------------------ */
+            const corr = (minD - d) * stiff;
+            const sa = corr * (ima / wsum), sb = corr * (imb / wsum);
+            px[a] -= nx * sa; py[a] -= ny * sa; pz[a] -= nz * sa;
+            px[b] += nx * sb; py[b] += ny * sb; pz[b] += nz * sb;
+
+            /* --- position-based friction, every pass ----------------------
+               A pile does not flow because of velocity, it flows because the
+               relaxation passes keep projecting overlapping balls apart, and
+               the tangential part of that projection walks material down the
+               slope. No velocity impulse can oppose it, which is why cancelling
+               tangential velocity entirely still left a flat puddle. This
+               resists the tangential DISPLACEMENT instead, bounded by the
+               penetration depth, and it is what produces an angle of repose. */
+            if (mu > 0) {
+              const rdx = (px[b] - prx[b]) - (px[a] - prx[a]);
+              const rdy = (py[b] - pry[b]) - (py[a] - pry[a]);
+              const rdz = (pz[b] - prz[b]) - (pz[a] - prz[a]);
+              const rdn = rdx * nx + rdy * ny + rdz * nz;
+              const tdx = rdx - rdn * nx, tdy = rdy - rdn * ny, tdz = rdz - rdn * nz;
+              const tdl = Math.sqrt(tdx * tdx + tdy * tdy + tdz * tdz);
+              if (tdl > 1e-6) {
+                const f = Math.min(tdl, mu * (minD - d)) / tdl;
+                const fa = f * (ima / wsum), fb = f * (imb / wsum);
+                px[a] += tdx * fa; py[a] += tdy * fa; pz[a] += tdz * fa;
+                px[b] -= tdx * fb; py[b] -= tdy * fb; pz[b] -= tdz * fb;
+              }
+            }
+
+            if (!impulse) continue;
+
+            /* --- restitution: only for contacts that are closing ---------- */
+            const rvx = vx[b] - vx[a], rvy = vy[b] - vy[a], rvz = vz[b] - vz[a];
+            const vn = rvx * nx + rvy * ny + rvz * nz;
+            if (vn < 0) {
+              const jn = -(1 + rest) * vn / wsum;
+              vx[a] -= nx * jn * ima; vy[a] -= ny * jn * ima; vz[a] -= nz * jn * ima;
+              vx[b] += nx * jn * imb; vy[b] += ny * jn * imb; vz[b] += nz * jn * imb;
+            }
+
+            /* --- friction: on EVERY contact, resting ones included --------
+               Bounding friction by the approach speed was the mistake: a
+               settled pile has vn about zero, so a ball sliding down a slope
+               got no friction at all and no heap could ever form. The bound
+               comes from the load instead — the normal correction the solver
+               just had to apply, expressed as the impulse equivalent — so a
+               buried contact grips hard and a grazing one barely grips. */
+            if (mu <= 0) continue;
+            const rv2x = vx[b] - vx[a], rv2y = vy[b] - vy[a], rv2z = vz[b] - vz[a];
+            const vn2 = rv2x * nx + rv2y * ny + rv2z * nz;
+            const tvx = rv2x - vn2 * nx, tvy = rv2y - vn2 * ny, tvz = rv2z - vn2 * nz;
+            const tl = Math.sqrt(tvx * tvx + tvy * tvy + tvz * tvz);
+            if (tl < 1e-4) continue;
+            const jnLoad = corr / (wsum * h);          // positional push as an impulse
+            const jt = Math.min(mu * jnLoad, tl / wsum);   // inside the friction cone
+            const tx = tvx / tl, ty = tvy / tl, tz = tvz / tl;
+            vx[a] += tx * jt * ima; vy[a] += ty * jt * ima; vz[a] += tz * jt * ima;
+            vx[b] -= tx * jt * imb; vy[b] -= ty * jt * imb; vz[b] -= tz * jt * imb;
+          }
         }
       }
     }
   }
 }
 
-function walls() {
-  const e = cfg.bounce;
-  const friction = 1 - cfg.viscosity * 0.06; // runs ITERATIONS x SUBSTEPS per frame
+
+function walls(impulse) {
+  const e = cfg.wallBounce;
+  const f = impulse ? 1 - cfg.wallFriction : 1;
+  const flat = DZ <= 2 * maxR + 0.001;         // depth 1 collapses to a plane
   for (let i = 0; i < count; i++) {
     const r = rad[i];
-    if (px[i] < r) {
-      const v = px[i] - ox[i];
-      px[i] = r; ox[i] = px[i] + v * e;
-      oy[i] = py[i] - (py[i] - oy[i]) * friction;
-    } else if (px[i] > W - r) {
-      const v = px[i] - ox[i];
-      px[i] = W - r; ox[i] = px[i] + v * e;
-      oy[i] = py[i] - (py[i] - oy[i]) * friction;
+    if (px[i] < boxX0 + r) {
+      px[i] = boxX0 + r;
+      if (vx[i] < 0) { vx[i] = -vx[i] * e; vy[i] *= f; vz[i] *= f; nCount[i] += 3; }
+    } else if (px[i] > boxX1 - r) {
+      px[i] = boxX1 - r;
+      if (vx[i] > 0) { vx[i] = -vx[i] * e; vy[i] *= f; vz[i] *= f; nCount[i] += 3; }
     }
-    if (py[i] < r) {
-      const v = py[i] - oy[i];
-      py[i] = r; oy[i] = py[i] + v * e;
-      ox[i] = px[i] - (px[i] - ox[i]) * friction;
-    } else if (py[i] > H - r) {
-      const v = py[i] - oy[i];
-      py[i] = H - r; oy[i] = py[i] + v * e;
-      ox[i] = px[i] - (px[i] - ox[i]) * friction;
+    if (py[i] < boxY0 + r) {
+      py[i] = boxY0 + r;
+      if (vy[i] < 0) { vy[i] = -vy[i] * e; vx[i] *= f; vz[i] *= f; nCount[i] += 3; }
+    } else if (py[i] > boxY1 - r) {
+      py[i] = boxY1 - r;
+      if (vy[i] > 0) { vy[i] = -vy[i] * e; vx[i] *= f; vz[i] *= f; nCount[i] += 3; }
+    }
+    if (flat) { pz[i] = DZ * 0.5; vz[i] = 0; continue; }
+    if (pz[i] < r) {
+      pz[i] = r;
+      if (vz[i] < 0) { vz[i] = -vz[i] * e; vx[i] *= f; vy[i] *= f; nCount[i] += 3; }
+    } else if (pz[i] > DZ - r) {
+      pz[i] = DZ - r;
+      if (vz[i] > 0) { vz[i] = -vz[i] * e; vx[i] *= f; vy[i] *= f; nCount[i] += 3; }
     }
   }
 }
 
-/* =========================================================================
-   7. Render
-   ========================================================================= */
+/* Kill the shimmer in a settled pile: a ball that is in contact and barely
+   moving has its velocity crushed rather than left to buzz forever.
 
-function render() {
-  ctx.globalCompositeOperation = "source-over";
-  ctx.globalAlpha = 1;
-
-  if (cfg.trail >= 0.99) {
-    ctx.drawImage(backdrop, 0, 0);
-  } else {
-    ctx.globalAlpha = cfg.trail;
-    ctx.drawImage(backdrop, 0, 0);
-    ctx.globalAlpha = 1;
-  }
-
-  ctx.globalCompositeOperation = "lighter";
-  const speedNorm = 1 / (baseR * 0.42);
-
+   The damping is a RATE, raised to the substep length. A flat per-substep
+   multiply froze the whole simulation at four or more substeps: gravity adds
+   a*h of speed per step, which shrinks as substeps rise, so below about
+   1/180 s it never cleared the cutoff and every ball was re-crushed before it
+   could start falling. Nothing overlapped, nothing moved, and the overlap
+   metric read a perfect zero — a frozen pile looks exactly like a converged
+   one from the outside. */
+function settle(h) {
+  const t = cfg.restSpeed * H;
+  if (t <= 0) return;
+  const t2 = t * t;
+  const k = Math.pow(0.25, h * 60);
   for (let i = 0; i < count; i++) {
-    const vx = px[i] - ox[i], vy = py[i] - oy[i];
-    const sp = Math.sqrt(vx * vx + vy * vy) * speedNorm;
-    let lvl = (sp * LEVELS) | 0;
-    if (lvl > LEVELS - 1) lvl = LEVELS - 1;
-
-    const r = rad[i], size = r * 2 * SPRITE_EXT;
-    ctx.globalAlpha = cfg.glow;
-    ctx.drawImage(sprites[lvl], px[i] - r * SPRITE_EXT, py[i] - r * SPRITE_EXT, size, size);
+    if (nCount[i] === 0) continue;
+    const s2 = vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i];
+    if (s2 < t2) { vx[i] *= k; vy[i] *= k; vz[i] *= k; }
   }
-
-  ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = "source-over";
 }
 
-/* =========================================================================
-   8. Sensors — map device gravity into screen space
-   ========================================================================= */
+/* ===========================================================================
+   8. Gravity sources
+   =========================================================================== */
 
-let sensorLive = false, lastMag = 9.81;
+let sensorLive = false, sensorHz = 0, sensorTicks = 0, sensorClock = 0;
+let rawA = [0, 0, 0], lastMag = 9.81, permState = "not asked";
+let ptrX = 0, ptrY = 0;
 
 function onMotion(e) {
   const a = e.accelerationIncludingGravity;
-  if (!a || a.x === null) return;
-  sensorLive = true;
+  if (!a || a.x === null || a.x === undefined) return;
+  sensorLive = true; sensorTicks++;
+  rawA = [a.x, a.y, a.z || 0];
 
   const ang = ((screen.orientation && screen.orientation.angle) || window.orientation || 0) * Math.PI / 180;
   const c = Math.cos(ang), s = Math.sin(ang);
 
-  // Derivation: g_device = -acceleration. Screen axes rotate by -angle.
-  let sx = -a.x * c + a.y * s;
-  let sy =  a.x * s + a.y * c;
+  // g_device = -acceleration; screen axes rotate by -angle.
+  const sx = -a.x * c + a.y * s;
+  const sy =  a.x * s + a.y * c;
+  const sz = cfg.useZ ? -(a.z || 0) : 0;
 
-  const mag = Math.hypot(sx, sy, a.z) || 9.81;
-  gx = sx / 9.81;
-  gy = sy / 9.81;
+  const mag = Math.hypot(a.x, a.y, a.z || 0) || 9.81;
+  const k = cfg.tiltSmooth;
+  if (cfg.gravSource === "device") {
+    gvx = gvx * k + (sx / 9.81) * (1 - k);
+    gvy = gvy * k + (sy / 9.81) * (1 - k);
+    gvz = gvz * k + (sz / 9.81) * (1 - k);
+  }
 
-  // Shake detection off the magnitude swing.
   const delta = Math.abs(mag - lastMag);
   lastMag = lastMag * 0.8 + mag * 0.2;
-  if (delta > 6) shakeImpulse = Math.min(baseR * 0.5, delta * 0.35);
+  if (delta > cfg.shakeThresh) shakeImpulse = Math.min(3, delta * 0.06 * cfg.shakeImpulse);
+}
+
+function updateGravity(dt) {
+  const src = cfg.gravSource;
+  if (src === "fixed") {
+    const a = cfg.gravAngle * Math.PI / 180;
+    const flat = Math.sqrt(Math.max(0, 1 - cfg.gravZ * cfg.gravZ));
+    gvx = Math.cos(a) * flat; gvy = Math.sin(a) * flat; gvz = cfg.gravZ;
+  } else if (src === "orbit") {
+    orbitPhase += cfg.orbitSpeed * Math.PI * 2 * dt;
+    gvx = Math.cos(orbitPhase); gvy = Math.sin(orbitPhase); gvz = 0;
+  } else if (src === "pointer") {
+    const dx = ptrX - W * 0.5, dy = ptrY - H * 0.5;
+    const d = Math.hypot(dx, dy) || 1;
+    gvx = dx / d; gvy = dy / d; gvz = 0;
+  }
 }
 
 async function enableSensors() {
@@ -537,33 +1001,281 @@ async function enableSensors() {
     if (typeof DeviceMotionEvent !== "undefined" &&
         typeof DeviceMotionEvent.requestPermission === "function") {
       const res = await DeviceMotionEvent.requestPermission();
+      permState = res;
       if (res !== "granted") return false;
+    } else {
+      permState = "not required";
     }
-  } catch (_) { /* fall through — Android does not gate this */ }
-  window.addEventListener("devicemotion", onMotion, { passive: true });
+  } catch (err) { permState = "blocked: " + err.name; }
+  window.addEventListener("devicemotion", onMotion, {passive: true});
   return true;
 }
 
-/* =========================================================================
-   9. Touch — drag to stir
-   ========================================================================= */
+/* ===========================================================================
+   9. Render
+   ---------------------------------------------------------------------------
+   Painter's algorithm, back to front, opaque. A sphere is rotationally
+   symmetric, so rotating its sprite is exactly equivalent to moving the light
+   around the view axis — which is why the light angle is free to change every
+   frame without re-shading a single pixel.
+   =========================================================================== */
 
-let lastTouchX = 0, lastTouchY = 0;
+const OCC_FULL = 5;      // neighbours in front that count as fully buried
+// Positions handed to the renderer: the physics state interpolated to the
+// display moment. The fixed-step accumulator gives a frame 0, 1 or 2 physics
+// steps depending on where the frame boundary falls, so drawing the raw state
+// makes the pile lurch by a different amount every frame even though the
+// simulation itself is perfectly regular. Interpolating removes it.
+const rx = new Float32Array(MAX_BALLS), ry = new Float32Array(MAX_BALLS), rz = new Float32Array(MAX_BALLS);
+const NBUCK = 128;
+const bucketOf = new Int32Array(MAX_BALLS);
+const drawOrder = new Int32Array(MAX_BALLS);
+const bCount = new Int32Array(NBUCK);
+const bCursor = new Int32Array(NBUCK);
+
+function depthSort() {
+  bCount.fill(0);
+  const inv = NBUCK / (DZ + 1e-6);
+  for (let i = 0; i < count; i++) {
+    let b = (rz[i] * inv) | 0;
+    if (b < 0) b = 0; else if (b >= NBUCK) b = NBUCK - 1;
+    bucketOf[i] = b; bCount[b]++;
+  }
+  let run = 0;
+  for (let b = 0; b < NBUCK; b++) { bCursor[b] = run; run += bCount[b]; }
+  for (let i = 0; i < count; i++) drawOrder[bCursor[bucketOf[i]]++] = i;
+}
+
+function orientSprites(deg) {
+  if (sphereSprites.length === canonSprites.length && Math.abs(deg - spriteAngle) < 2.5) return;
+  spriteAngle = deg;
+  const a = deg * Math.PI / 180, C = SPR / 2;
+
+  if (sphereSprites.length !== canonSprites.length) {   // allocate once, then reuse
+    sphereSprites = canonSprites.map(rungs => rungs.map(() => {
+      const cv = document.createElement("canvas");
+      cv.width = cv.height = SPR;
+      return cv;
+    }));
+  }
+  for (let ci = 0; ci < canonSprites.length; ci++) {
+    for (let s = 0; s < canonSprites[ci].length; s++) {
+      const g = sphereSprites[ci][s].getContext("2d");
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.clearRect(0, 0, SPR, SPR);
+      g.translate(C, C); g.rotate(a); g.drawImage(canonSprites[ci][s], -C, -C);
+      g.setTransform(1, 0, 0, 1, 0, 0);
+    }
+  }
+}
+
+function effectiveLightAngle() {
+  if (cfg.lightMode === "world") {
+    const d = Math.atan2(gvy, gvx) * 180 / Math.PI - 90;
+    return cfg.lightAngle + d;
+  }
+  return cfg.lightAngle;
+}
+
+function interpolate() {
+  const h = 1 / (60 * Math.max(1, cfg.substeps | 0));
+  let a = acc / h;
+  if (!(a >= 0)) a = 0; else if (a > 1) a = 1;
+  for (let i = 0; i < count; i++) {
+    rx[i] = prx[i] + (px[i] - prx[i]) * a;
+    ry[i] = pry[i] + (py[i] - pry[i]) * a;
+    rz[i] = prz[i] + (pz[i] - prz[i]) * a;
+  }
+
+  // Occlusion is an integer neighbour count that changes as balls jostle, and
+  // it selects a rung on a 12-step shade ladder. Used raw, a ball sitting on a
+  // rung boundary flips brightness every single frame and the whole pile
+  // shimmers. Ease it instead — depth shading has no business reacting
+  // instantly to one neighbour arriving.
+  const k = cfg.shadeEase <= 0 ? 1 : 1 - Math.pow(1 - cfg.shadeEase, 1.6);
+  for (let i = 0; i < count; i++) {
+    const target = frontN[i] >= OCC_FULL ? 1 : frontN[i] / OCC_FULL;
+    occ[i] += (target - occ[i]) * k;
+  }
+}
+
+function render() {
+  interpolate();
+  ctx.globalCompositeOperation = "source-over";
+  ctx.globalAlpha = cfg.trail > 0 ? 1 - cfg.trail * 0.97 : 1;
+  ctx.drawImage(backdrop, 0, 0);
+  ctx.globalAlpha = 1;
+
+  if (cfg.renderMode === "glow") { renderGlow(); return; }
+
+  const ang = effectiveLightAngle();
+  orientSprites(ang);
+  const ar = ang * Math.PI / 180;
+  const elx = Math.cos(ar), ely = Math.sin(ar);
+
+  depthSort();
+
+  const cx = W * 0.5, cy = H * 0.5;
+  const persp = cfg.perspective, nsh = NSHADE - 1;
+  const dim = cfg.depthDim, aoAmt = cfg.ao;
+  const wantShadow = cfg.shadows && cfg.shadowStrength > 0;
+  const soff = cfg.shadowOffset;
+  const invDZ = 1 / (DZ + 1e-6);
+  // Drawn a hair inside the collision radius. The solver is deliberately
+  // compliant, so contacts always carry a little residual overlap; taking it
+  // off the drawn radius instead of chasing it with more passes means resting
+  // balls read as touching rather than merged, and it costs nothing.
+  const drawScale = 1 - cfg.drawGap;
+
+  for (let k = 0; k < count; k++) {
+    const i = drawOrder[k];
+    const zt = rz[i] * invDZ;                    // 0 at the back wall, 1 at the glass
+    const pf = 1 - persp * (1 - zt);
+    const sx = cx + (rx[i] - cx) * pf;
+    const sy = cy + (ry[i] - cy) * pf;
+    const r = rad[i] * pf * drawScale;
+
+    if (wantShadow) {
+      const sr = r * 1.18;
+      ctx.globalAlpha = cfg.shadowStrength;
+      ctx.drawImage(shadowSprite,
+        sx - elx * r * soff - sr, sy - ely * r * soff - sr, sr * 2, sr * 2);
+      ctx.globalAlpha = 1;
+    }
+
+    const o = occ[i];
+    let sh = ((dim * (1 - zt) + aoAmt * o) * nsh) | 0;
+    if (sh > nsh) sh = nsh; else if (sh < 0) sh = 0;
+
+    ctx.drawImage(sphereSprites[colIdx[i]][sh], sx - r, sy - r, r * 2, r * 2);
+  }
+}
+
+function renderGlow() {
+  ctx.globalCompositeOperation = "lighter";
+  const EXT = 2.3, inv = 1 / (cfg.maxSpeed * H * 0.35 + 1e-6);
+  for (let i = 0; i < count; i++) {
+    const sp = Math.sqrt(vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i]) * inv;
+    let l = (sp * GLOW_LEVELS) | 0;
+    if (l > GLOW_LEVELS - 1) l = GLOW_LEVELS - 1; else if (l < 0) l = 0;
+    const r = rad[i], size = r * 2 * EXT;
+    ctx.globalAlpha = cfg.glowAmount;
+    ctx.drawImage(glowSprites[colIdx[i]][l], rx[i] - r * EXT, ry[i] - r * EXT, size, size);
+  }
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = "source-over";
+}
+
+/* ===========================================================================
+   10. Loop
+   ---------------------------------------------------------------------------
+   Real elapsed time is accumulated and drained in FIXED steps. v1 ran a fixed
+   number of steps per animation frame, which made the whole simulation run at
+   double speed on a 120 Hz screen; this is what stops that.
+   =========================================================================== */
+
+function shakeDecayRate() {
+  return -Math.log(Math.max(1e-4, Math.min(0.999, cfg.shakeDecay))) * 60;
+}
+
+let acc = 0, lastT = 0, physMs = 0, rendMs = 0, fps = 0, frames = 0, fpsClock = 0, stepsLast = 0;
+
+function tick(dt) {
+  updateGravity(dt);            // inside tick, so the self-test drives the same path
+  const subs = Math.max(1, cfg.substeps | 0);
+  const h = 1 / (60 * subs);
+  const budget = subs * 8;                    // never spiral trying to catch up
+  acc += dt;
+  let steps = 0;
+  while (acc >= h && steps < budget) { substep(h); acc -= h; steps++; }
+  if (acc > h * budget) acc = 0;
+  stepsLast = steps;
+}
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (!lastT) { lastT = now; fpsClock = now; }
+  let real = (now - lastT) / 1000;
+  lastT = now;
+  if (real > 0.05) real = 0.05;               // a long stall must not teleport anything
+  const dt = real * cfg.timeScale;
+
+  if (!paused && dt > 0) {
+    const t0 = performance.now();
+    tick(dt);
+    physMs = physMs * 0.9 + (performance.now() - t0) * 0.1;
+  }
+
+  const t1 = performance.now();
+  render();
+  rendMs = rendMs * 0.9 + (performance.now() - t1) * 0.1;
+
+  frames++;
+  if (now - fpsClock > 500) {
+    fps = frames * 1000 / (now - fpsClock);
+    frames = 0; fpsClock = now;
+    if (now - sensorClock > 0) { sensorHz = sensorTicks * 1000 / (now - sensorClock); }
+    sensorTicks = 0; sensorClock = now;
+    updateOverlays();
+  }
+}
+
+const statsEl = document.getElementById("stats");
+const sensorsEl = document.getElementById("sensors");
+
+function updateOverlays() {
+  if (cfg.showStats) {
+    let fast = 0;
+    for (let i = 0; i < count; i++) {
+      const s = vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i];
+      if (s > fast) fast = s;
+    }
+    statsEl.textContent =
+      fps.toFixed(0) + " fps\n" +
+      count + " balls\n" +
+      "phys " + physMs.toFixed(1) + " ms\n" +
+      "draw " + rendMs.toFixed(1) + " ms\n" +
+      stepsLast + " steps/frame\n" +
+      "vmax " + (Math.sqrt(fast) / H).toFixed(2) + " scr/s";
+  }
+  if (cfg.showSensors) {
+    const ok = sensorLive ? "<b>live " + sensorHz.toFixed(0) + " Hz</b>" : "<i>no events</i>";
+    sensorsEl.innerHTML =
+      "motion  " + ok + "\n" +
+      "secure  " + (window.isSecureContext ? "<b>yes</b>" : "<i>no</i>") + "\n" +
+      "perm    " + permState + "\n" +
+      "raw a   " + rawA.map(v => (v || 0).toFixed(2)).join(" ") + "\n" +
+      "grav    " + gvx.toFixed(2) + " " + gvy.toFixed(2) + " " + gvz.toFixed(2) + "\n" +
+      "screen  " + (((screen.orientation && screen.orientation.angle) || 0)) + " deg";
+  }
+}
+
+/* ===========================================================================
+   11. Touch
+   =========================================================================== */
+
+let lastTX = 0, lastTY = 0, lastTTime = 0;
 
 canvas.addEventListener("pointerdown", e => {
   stirActive = true;
   stirX = e.clientX * dpr; stirY = e.clientY * dpr;
-  lastTouchX = stirX; lastTouchY = stirY;
+  ptrX = stirX; ptrY = stirY;
+  lastTX = stirX; lastTY = stirY; lastTTime = performance.now();
   stirVX = stirVY = 0;
+  panel.classList.remove("open");
   dimHandle();
 });
 
 canvas.addEventListener("pointermove", e => {
+  const x = e.clientX * dpr, y = e.clientY * dpr;
+  ptrX = x; ptrY = y;
   if (!stirActive) return;
-  stirX = e.clientX * dpr; stirY = e.clientY * dpr;
-  stirVX = (stirX - lastTouchX) * 0.5;
-  stirVY = (stirY - lastTouchY) * 0.5;
-  lastTouchX = stirX; lastTouchY = stirY;
+  const now = performance.now();
+  const dtms = Math.max(8, now - lastTTime);
+  stirX = x; stirY = y;
+  stirVX = (x - lastTX) / dtms;               // px per ms
+  stirVY = (y - lastTY) / dtms;
+  lastTX = x; lastTY = y; lastTTime = now;
 });
 
 const endStir = () => { stirActive = false; };
@@ -571,105 +1283,381 @@ canvas.addEventListener("pointerup", endStir);
 canvas.addEventListener("pointercancel", endStir);
 canvas.addEventListener("pointerleave", endStir);
 
-/* =========================================================================
-   10. Loop
-   ========================================================================= */
-
-const FIXED_DT = 1 / 60 / SUBSTEPS;
-let frames = 0, fpsClock = performance.now();
-const fpsEl = document.getElementById("fps");
-
-function frame() {
-  if (!cfg.paused) {
-    for (let s = 0; s < SUBSTEPS; s++) step(FIXED_DT);
-  }
-  render();
-
-  frames++;
-  const now = performance.now();
-  if (now - fpsClock > 500) {
-    if (fpsEl.classList.contains("show")) {
-      fpsEl.textContent = Math.round(frames * 1000 / (now - fpsClock)) + " fps · " + count;
-    }
-    frames = 0; fpsClock = now;
-  }
-  requestAnimationFrame(frame);
-}
-
-/* =========================================================================
-   11. UI wiring
-   ========================================================================= */
+/* ===========================================================================
+   12. Panel UI, generated from the schema
+   =========================================================================== */
 
 const panel = document.getElementById("panel");
 const handle = document.getElementById("handle");
-let dimTimer = null;
+const rowsEl = document.getElementById("rows");
+const chipsEl = document.getElementById("chips");
+const presetSel = document.getElementById("preset");
+const noteEl = document.getElementById("note");
+const ioBox = document.getElementById("io");
+const ioText = document.getElementById("io-text");
 
+let activeGroup = "mat";
+let activePreset = "Ball Pit";
+// A config arriving by paste, link or slot is its own baseline. Without this
+// the dropdown kept claiming the last preset and every row read as modified
+// against a baseline the values had nothing to do with.
+let customBase = null;
+let userPresets = {};
+const bounds = {};
+for (const p of PARAMS) if (p.t !== "bool" && p.t !== "enum") bounds[p.k] = {min: p.min, max: p.max};
+
+/* --- side effects ------------------------------------------------------- */
+function regeom() { geometry(); buildGrid(); }
+function rerollSizes() {
+  for (let i = 0; i < count; i++) radVar[i] = 1 - cfg.sizeVar * 0.5 + rnd() * cfg.sizeVar;
+  regeom();
+}
+function recolor() { buildColors(); reshadeNow(); }
+function reshadeNow() { buildSprites(); }
+function setCount() {
+  const target = Math.max(1, Math.min(MAX_BALLS, cfg.count | 0));
+  for (let i = count; i < target; i++) {
+    initBall(i);
+    px[i] = boxX0 + rnd() * (boxX1 - boxX0);
+    py[i] = boxY0 + rnd() * (boxY1 - boxY0) * 0.25;
+    pz[i] = rad[i] + rnd() * Math.max(0, DZ - 2 * rad[i]);
+    vx[i] = vy[i] = vz[i] = 0; occ[i] = 0; nCount[i] = 0;
+  }
+  count = target;
+}
+function overlays() {
+  statsEl.classList.toggle("show", !!cfg.showStats);
+  sensorsEl.classList.toggle("show", !!cfg.showSensors);
+}
+
+let shadeTimer = null;
+function reshadeSoon() {
+  clearTimeout(shadeTimer);
+  shadeTimer = setTimeout(reshadeNow, 110);   // per-pixel rebuild, so not on every drag tick
+}
+
+const SIDE = {
+  ballSize: regeom, slabDepth: regeom, inset: regeom, sizeVar: rerollSizes,
+  count: setCount,
+  palette: () => { buildColors(); reshadeSoon(); },
+  colorSpread: () => { buildColors(); reshadeSoon(); },
+  hueShift: () => { buildColors(); reshadeSoon(); },
+  satMul: () => { buildColors(); reshadeSoon(); },
+  lightMul: () => { buildColors(); reshadeSoon(); },
+  ambient: reshadeSoon, diffuse: reshadeSoon, sheen: reshadeSoon, edgeDark: reshadeSoon,
+  bgLight: paintBackdrop, vignette: paintBackdrop,
+  showStats: overlays, showSensors: overlays
+};
+
+/* --- reading and writing values ----------------------------------------- */
+function presetValue(k) {
+  const src = customBase || userPresets[activePreset] || PRESETS[activePreset] || {};
+  return k in src ? src[k] : P_BY_KEY[k].d;
+}
+
+/* Adopt whatever is loaded right now as the baseline. */
+function adoptAsCustom() {
+  customBase = sparse();
+  activePreset = "Custom";
+}
+
+function setParam(k, v, redraw) {
+  const p = P_BY_KEY[k];
+  if (p.t === "bool") v = !!v;
+  else if (p.t !== "enum") {
+    v = parseFloat(v);
+    if (!isFinite(v)) return;
+    if (p.t === "int") v = Math.round(v);
+  }
+  cfg[k] = v;
+  if (SIDE[k]) SIDE[k]();
+  persist();
+  if (redraw !== false) refreshRow(k);
+}
+
+const rowEls = {};
+
+function refreshRow(k) {
+  const r = rowEls[k];
+  if (!r) return;
+  const p = P_BY_KEY[k];
+  if (r.range) {
+    if (cfg[k] < bounds[k].min || cfg[k] > bounds[k].max) widen(k, cfg[k]);
+    r.range.value = cfg[k];
+  }
+  if (r.num) r.num.value = fmt(p, cfg[k]);
+  if (r.sel) r.sel.value = cfg[k];
+  if (r.tog) { r.tog.classList.toggle("on", !!cfg[k]); r.tog.textContent = cfg[k] ? "On" : "Off"; }
+  r.el.classList.toggle("dirty", cfg[k] !== presetValue(k));
+}
+
+function fmt(p, v) {
+  if (p.t === "int") return String(Math.round(v));
+  if (Math.abs(v) >= 100) return v.toFixed(0);
+  if (Math.abs(v) >= 10) return v.toFixed(1);
+  return String(Math.round(v * 1000) / 1000);
+}
+
+/* Typing a value past either end of a slider widens the slider to fit it
+   rather than clamping — the number box is the authority, not the track. */
+function widen(k, v) {
+  const b = bounds[k];
+  if (v < b.min) b.min = v - Math.abs(v) * 0.25 - 0.001;
+  if (v > b.max) b.max = v + Math.abs(v) * 0.25 + 0.001;
+  const r = rowEls[k];
+  if (r && r.range) { r.range.min = b.min; r.range.max = b.max; }
+}
+
+/* --- building the rows --------------------------------------------------- */
+function buildChips() {
+  chipsEl.innerHTML = "";
+  for (const [g, label] of GROUPS) {
+    const b = document.createElement("button");
+    b.textContent = label;
+    b.className = g === activeGroup ? "on" : "";
+    b.addEventListener("click", () => { activeGroup = g; buildChips(); buildRows(); });
+    chipsEl.appendChild(b);
+  }
+}
+
+function buildRows() {
+  rowsEl.innerHTML = "";
+  for (const k in rowEls) delete rowEls[k];
+
+  for (const p of PARAMS) {
+    if (p.g !== activeGroup) continue;
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const lab = document.createElement("label");
+    lab.textContent = p.u ? p.n + " (" + p.u + ")" : p.n;
+    lab.title = "Tap to reset to the preset value";
+    lab.addEventListener("click", () => setParam(p.k, presetValue(p.k)));
+    row.appendChild(lab);
+
+    const rec = {el: row};
+
+    if (p.t === "bool") {
+      const t = document.createElement("button");
+      t.className = "mini toggle";
+      t.addEventListener("click", () => setParam(p.k, !cfg[p.k]));
+      row.appendChild(t);
+      rec.tog = t;
+    } else if (p.t === "enum") {
+      const s = document.createElement("select");
+      for (const [val, name] of p.opts) {
+        const o = document.createElement("option");
+        o.value = val; o.textContent = name;
+        s.appendChild(o);
+      }
+      s.addEventListener("change", () => setParam(p.k, s.value));
+      row.appendChild(s);
+      rec.sel = s;
+    } else {
+      const rg = document.createElement("input");
+      rg.type = "range";
+      rg.min = bounds[p.k].min; rg.max = bounds[p.k].max; rg.step = p.step;
+      rg.addEventListener("input", () => setParam(p.k, rg.value));
+      row.appendChild(rg);
+
+      const nb = document.createElement("input");
+      nb.className = "num"; nb.type = "text"; nb.inputMode = "decimal";
+      const commit = () => {
+        const v = parseFloat(nb.value);
+        if (isFinite(v)) { widen(p.k, v); setParam(p.k, v); }
+        else refreshRow(p.k);
+      };
+      nb.addEventListener("change", commit);
+      nb.addEventListener("blur", commit);
+      nb.addEventListener("keydown", e => { if (e.key === "Enter") { nb.blur(); } });
+      row.appendChild(nb);
+      rec.range = rg; rec.num = nb;
+    }
+
+    rowEls[p.k] = rec;
+    rowsEl.appendChild(row);
+    refreshRow(p.k);
+  }
+}
+
+function refreshAll() {
+  for (const p of PARAMS) refreshRow(p.k);
+}
+
+/* --- presets ------------------------------------------------------------- */
+function buildPresetList() {
+  presetSel.innerHTML = "";
+  const add = (name, group) => {
+    const o = document.createElement("option");
+    o.value = name; o.textContent = group ? group + name : name;
+    presetSel.appendChild(o);
+  };
+  if (customBase) add("Custom");
+  for (const name in PRESETS) add(name);
+  for (const name in userPresets) add(name, "* ");
+  presetSel.value = activePreset;
+}
+
+function applyPreset(name) {
+  const src = userPresets[name] || PRESETS[name];
+  if (!src) return;
+  customBase = null;
+  activePreset = name;
+  for (const p of PARAMS) {
+    const v = (p.k in src) ? src[p.k] : p.d;
+    if (bounds[p.k] && (v < bounds[p.k].min || v > bounds[p.k].max)) widen(p.k, v);
+    cfg[p.k] = v;
+  }
+  afterBulkChange();
+}
+
+function afterBulkChange() {
+  buildColors();
+  geometry();
+  buildGrid();
+  buildSprites();
+  paintBackdrop();
+  setCount();
+  overlays();
+  buildPresetList();
+  buildRows();
+  persist();
+}
+
+/* --- persistence: localStorage, URL hash, clipboard ---------------------- */
+function sparse() {
+  const o = {};
+  for (const p of PARAMS) if (cfg[p.k] !== p.d) o[p.k] = cfg[p.k];
+  return o;
+}
+
+function loadSparse(v) {
+  for (const p of PARAMS) {
+    const val = (p.k in v) ? v[p.k] : p.d;
+    if (bounds[p.k] && (val < bounds[p.k].min || val > bounds[p.k].max)) widen(p.k, val);
+    cfg[p.k] = val;
+  }
+}
+
+function persist() {
+  try {
+    localStorage.setItem("ballpit.cfg", JSON.stringify({p: activePreset, v: sparse()}));
+  } catch (_) {}
+}
+
+function restore() {
+  try {
+    const m = location.hash.match(/[#&]c=([^&]+)/);
+    if (m) { const o = JSON.parse(decodeURIComponent(m[1])); if (o.p) activePreset = o.p; loadSparse(o.v || o);
+             if (!PRESETS[activePreset]) { customBase = sparse(); activePreset = "Custom"; } return; }
+  } catch (_) {}
+  try {
+    const s = localStorage.getItem("ballpit.cfg");
+    if (s) { const o = JSON.parse(s); if (o.p) activePreset = o.p; loadSparse(o.v || {}); }
+  } catch (_) {}
+  try {
+    const s = localStorage.getItem("ballpit.presets");
+    if (s) userPresets = JSON.parse(s) || {};
+  } catch (_) {}
+}
+
+function savePresets() {
+  try { localStorage.setItem("ballpit.presets", JSON.stringify(userPresets)); } catch (_) {}
+}
+
+function configLink() {
+  const base = location.href.split("#")[0];
+  return base + "#c=" + encodeURIComponent(JSON.stringify({p: activePreset, v: sparse()}));
+}
+
+function toClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => say("Copied."), () => say("Copy blocked — select the text by hand."));
+    return;
+  }
+  ioText.value = text; ioBox.classList.add("open"); ioText.select();
+  say("Copy blocked on this origin — the text is selected, copy it by hand.");
+}
+
+let sayTimer = null;
+function say(msg) {
+  noteEl.textContent = msg;
+  clearTimeout(sayTimer);
+  sayTimer = setTimeout(() => { noteEl.textContent = HINT; }, 4000);
+}
+
+const HINT = "Tap a parameter name to reset it. Type any number in the box, even past the slider. Hold A or B to store a snapshot, tap to recall.";
+
+/* --- buttons ------------------------------------------------------------- */
+let dimTimer = null;
 function dimHandle() {
   handle.classList.remove("dim");
   clearTimeout(dimTimer);
   dimTimer = setTimeout(() => handle.classList.add("dim"), 3000);
 }
 
-handle.addEventListener("click", () => {
-  panel.classList.toggle("open");
-  dimHandle();
+handle.addEventListener("click", () => { panel.classList.toggle("open"); dimHandle(); });
+document.getElementById("b-close").addEventListener("click", () => panel.classList.remove("open"));
+
+presetSel.addEventListener("change", () => { applyPreset(presetSel.value); say("Preset: " + presetSel.value); });
+
+document.getElementById("b-save").addEventListener("click", () => {
+  const name = prompt("Save these settings as:", "My mix");
+  if (!name) return;
+  userPresets[name] = sparse();
+  savePresets();
+  customBase = null;
+  activePreset = name;
+  buildPresetList();
+  buildRows();
+  say("Saved as " + name + ".");
 });
 
-canvas.addEventListener("pointerdown", () => panel.classList.remove("open"));
-
-function bind(id, key, fmt, after) {
-  const el = document.getElementById("s-" + id);
-  const out = document.getElementById("o-" + id);
-  el.value = cfg[key];
-  out.textContent = fmt(cfg[key]);
-  el.addEventListener("input", () => {
-    cfg[key] = parseFloat(el.value);
-    out.textContent = fmt(cfg[key]);
-    if (after) after();
+function slotButton(id, key) {
+  const b = document.getElementById(id);
+  let held = false, timer = null;
+  const store = () => {
+    held = true;
+    try { localStorage.setItem("ballpit.slot" + key, JSON.stringify(sparse())); } catch (_) {}
+    b.classList.add("on");
+    say("Stored in slot " + key + ".");
+  };
+  b.addEventListener("pointerdown", () => { held = false; timer = setTimeout(store, 450); });
+  b.addEventListener("pointerup", () => {
+    clearTimeout(timer);
+    if (held) return;
+    try {
+      const s = localStorage.getItem("ballpit.slot" + key);
+      if (!s) { store(); return; }
+      loadSparse(JSON.parse(s));
+      adoptAsCustom();
+      afterBulkChange();
+      say("Recalled slot " + key + ".");
+    } catch (_) { say("Slot " + key + " is empty."); }
   });
+  b.addEventListener("pointerleave", () => clearTimeout(timer));
+  try { if (localStorage.getItem("ballpit.slot" + key)) b.classList.add("on"); } catch (_) {}
 }
-
-const int1 = v => Math.round(v);
-const dec2 = v => v.toFixed(2);
-
-bind("count", "count", int1, () => {
-  const target = Math.round(cfg.count);
-  if (target > count) {
-    for (let i = count; i < target; i++) {
-      radVar[i] = 0.75 + Math.random() * 0.5;
-      rad[i] = baseR * radVar[i];
-      px[i] = Math.random() * W;
-      py[i] = Math.random() * H * 0.25;
-      ox[i] = px[i]; oy[i] = py[i];
-    }
-  }
-  count = target;
-});
-bind("size", "sizeScale", dec2, () => { recomputeRadius(); buildGrid(); });
-bind("grav", "gravity", dec2);
-bind("bounce", "bounce", dec2);
-bind("visc", "viscosity", dec2);
-bind("trail", "trail", dec2);
-bind("glow", "glow", dec2);
-bind("hue", "hue", v => int1(v) + "°", buildSprites);
+slotButton("b-a", "A");
+slotButton("b-b", "B");
 
 document.getElementById("b-reset").addEventListener("click", () => {
-  spawn(Math.round(cfg.count));
+  spawn(cfg.count | 0);
+  say("Refilled.");
 });
 
 const pauseBtn = document.getElementById("b-pause");
 pauseBtn.addEventListener("click", () => {
-  cfg.paused = !cfg.paused;
-  pauseBtn.classList.toggle("on", cfg.paused);
-  pauseBtn.textContent = cfg.paused ? "Resume" : "Freeze";
+  paused = !paused;
+  pauseBtn.classList.toggle("on", paused);
+  pauseBtn.textContent = paused ? "Resume" : "Freeze";
 });
 
-const fullBtn = document.getElementById("b-full");
-fullBtn.addEventListener("click", async () => {
+document.getElementById("b-full").addEventListener("click", async () => {
   try {
     if (document.fullscreenElement) await document.exitFullscreen();
-    else await document.documentElement.requestFullscreen({ navigationUI: "hide" });
-  } catch (_) {}
+    else await document.documentElement.requestFullscreen({navigationUI: "hide"});
+  } catch (_) { say("Fullscreen refused."); }
 });
 
 let wakeLock = null;
@@ -678,53 +1666,377 @@ awakeBtn.addEventListener("click", async () => {
   try {
     if (wakeLock) { await wakeLock.release(); wakeLock = null; awakeBtn.classList.remove("on"); }
     else { wakeLock = await navigator.wakeLock.request("screen"); awakeBtn.classList.add("on"); }
-  } catch (_) { awakeBtn.textContent = "No wake lock"; }
+  } catch (_) { say("No wake lock on this browser."); }
 });
 document.addEventListener("visibilitychange", async () => {
   if (wakeLock && document.visibilityState === "visible") {
     try { wakeLock = await navigator.wakeLock.request("screen"); } catch (_) {}
   }
+  if (document.visibilityState === "visible") { lastT = 0; acc = 0; }
 });
 
-const fpsBtn = document.getElementById("b-fps");
-fpsBtn.addEventListener("click", () => {
-  fpsEl.classList.toggle("show");
-  fpsBtn.classList.toggle("on", fpsEl.classList.contains("show"));
+document.getElementById("b-io").addEventListener("click", () => {
+  ioBox.classList.toggle("open");
+  if (ioBox.classList.contains("open")) ioText.value = JSON.stringify(sparse(), null, 1);
+});
+document.getElementById("b-copy").addEventListener("click", () => {
+  ioText.value = JSON.stringify(sparse(), null, 1);
+  toClipboard(ioText.value);
+});
+document.getElementById("b-paste").addEventListener("click", () => {
+  try {
+    const o = JSON.parse(ioText.value);
+    loadSparse(o.v || o);
+    adoptAsCustom();
+    afterBulkChange();
+    say("Applied.");
+  } catch (e) { say("That is not valid JSON."); }
+});
+document.getElementById("b-link").addEventListener("click", () => {
+  const url = configLink();
+  history.replaceState(null, "", url);
+  toClipboard(url);
+});
+document.getElementById("b-defaults").addEventListener("click", () => {
+  applyPreset("Ball Pit");
+  presetSel.value = "Ball Pit";
+  say("Back to defaults.");
 });
 
-/* =========================================================================
-   12. Start
-   ========================================================================= */
+/* ===========================================================================
+   13. Self-test
+   ---------------------------------------------------------------------------
+   Headless. Drives the same code path the animation loop does, so anything it
+   proves is true of the running toy. Call window.__selftest() from a console.
+   =========================================================================== */
+
+function simulate(seconds, frameDt, applyCfg, opts) {
+  const saved = {};
+  if (applyCfg) for (const k in applyCfg) { saved[k] = cfg[k]; cfg[k] = applyCfg[k]; }
+  rngState = 12345;
+  geometry(); buildGrid(); buildColors();
+  spawn(cfg.count | 0);
+  if (opts && opts.column) {
+    // A compact column standing ON the floor, at rest. Releasing this is a
+    // slump test: friction decides what slope survives. The earlier version
+    // spread the balls over the whole box height, which jammed floor to
+    // ceiling and measured the violence of the collapse instead.
+    const mx = (boxX0 + boxX1) * 0.5;
+    const d = baseR * 2.02;
+    const perRow = Math.max(1, Math.round(opts.width || 10));
+    for (let i = 0; i < count; i++) {
+      const c = i % perRow, r = (i / perRow) | 0;
+      px[i] = mx + (c - (perRow - 1) / 2) * d + (rnd() - 0.5) * baseR * 0.04;
+      py[i] = boxY1 - rad[i] - r * d;
+      pz[i] = DZ * 0.5;
+      vx[i] = vy[i] = vz[i] = 0;
+    }
+  }
+  acc = 0;
+  const wasPaused = paused; paused = false;
+  const n = Math.round(seconds / frameDt);
+  for (let f = 0; f < n; f++) tick(frameDt * cfg.timeScale);
+  paused = wasPaused;
+
+  let bad = 0, escaped = 0, maxOv = 0, ke = 0, top = H, bottom = 0;
+  const ovs = [];
+  for (let i = 0; i < count; i++) {
+    if (!isFinite(px[i]) || !isFinite(py[i]) || !isFinite(pz[i]) ||
+        !isFinite(vx[i]) || !isFinite(vy[i]) || !isFinite(vz[i])) bad++;
+    const r = rad[i];
+    if (px[i] < boxX0 - r || px[i] > boxX1 + r ||
+        py[i] < boxY0 - r || py[i] > boxY1 + r ||
+        pz[i] < -r || pz[i] > DZ + r) escaped++;
+    ke += vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i];
+    if (py[i] < top) top = py[i];
+    if (py[i] > bottom) bottom = py[i];
+  }
+  hashParticles();
+  const layer = gcols * grows;
+  for (let a = 0; a < count; a++) {
+    const c = cellOf[a], cz = (c / layer) | 0, rem = c - cz * layer;
+    const cy = (rem / gcols) | 0, cx = rem - cy * gcols;
+    for (let z = cz - 1; z <= cz + 1; z++) { if (z < 0 || z >= gdeps) continue;
+      for (let y = cy - 1; y <= cy + 1; y++) { if (y < 0 || y >= grows) continue;
+        for (let x = cx - 1; x <= cx + 1; x++) { if (x < 0 || x >= gcols) continue;
+          const cell = z * layer + y * gcols + x, end = starts[cell + 1];
+          for (let k = starts[cell]; k < end; k++) {
+            const b = order[k];
+            if (b <= a) continue;
+            const dx = px[b] - px[a], dy = py[b] - py[a], dz = pz[b] - pz[a];
+            const minD = rad[a] + rad[b];
+            const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (d < minD) { const ov = (minD - d) / minD; ovs.push(ov); if (ov > maxOv) maxOv = ov; }
+          }
+        }
+      }
+    }
+  }
+  const snap = {x: Float32Array.from(px.subarray(0, count)), y: Float32Array.from(py.subarray(0, count))};
+  if (applyCfg) for (const k in saved) cfg[k] = saved[k];
+  ovs.sort((a, b) => a - b);
+  const pct = f => ovs.length ? ovs[Math.min(ovs.length - 1, Math.floor(ovs.length * f))] : 0;
+  return {bad, escaped, maxOverlap: maxOv, medOverlap: pct(0.5), p99Overlap: pct(0.99),
+          contacts: ovs.length, ke: ke / Math.max(1, count) / (H * H), top, bottom, snap, n: count};
+}
+
+window.__selftest = function () {
+  const out = [];
+  const ok = (name, cond, detail) => out.push({name, pass: !!cond, detail});
+  const savedCount = count;
+
+  /* 1. Stability at the parameter corners ------------------------------- */
+  const corners = [
+    ["max gravity",  {gravity: 4, count: 700, substeps: 1, gravSource: "fixed", gravAngle: 90}],
+    ["max bounce",   {bounce: 0.95, wallBounce: 0.95, count: 700, gravSource: "fixed", gravAngle: 90}],
+    // Deliberately mush: 5% of the overlap removed once per substep. Deep
+    // interpenetration is the CORRECT answer here, so this corner is checked
+    // for integrity only — asserting rigidity would be asserting that the
+    // stiffness slider does not work.
+    ["soft solver",  {stiffness: 0.05, iterations: 1, count: 700, gravSource: "fixed", gravAngle: 90}, "soft"],
+    ["dense pack",   {count: 2600, ballSize: 0.55, gravSource: "fixed", gravAngle: 90}],
+    ["deep pit",     {slabDepth: 12, count: 1500, gravSource: "fixed", gravAngle: 90}],
+    ["max cohesion", {cohesion: 3, cohesionRange: 1.5, count: 600, gravSource: "fixed", gravAngle: 90}],
+    ["heavy stir",   {friction: 1.5, drag: 6, count: 600, gravSource: "fixed", gravAngle: 90}]
+  ];
+  for (const [name, c, mode] of corners) {
+    const r = simulate(3, 1 / 60, c);
+    if (mode === "soft") {
+      ok("stable: " + name, r.bad === 0 && r.escaped === 0 && isFinite(r.ke),
+         "integrity only — nan=" + r.bad + " esc=" + r.escaped +
+         " overlap med=" + r.medOverlap.toFixed(3) + " (mush is expected)");
+      continue;
+    }
+    // Judged on the distribution. A compliant solver always has one worst
+    // contact somewhere, and at the abusive corners (one substep, four g) that
+    // pair can sit deep without anything being wrong; what would signal a real
+    // blow-up is the whole pile going soft, or NaN, or a ball leaving the box.
+    ok("stable: " + name,
+       r.bad === 0 && r.escaped === 0 && isFinite(r.ke) &&
+       r.medOverlap < 0.12 && r.p99Overlap < 0.45 && r.maxOverlap < 0.75,
+       "nan=" + r.bad + " esc=" + r.escaped + " overlap med=" + r.medOverlap.toFixed(3) +
+       " p99=" + r.p99Overlap.toFixed(3) + " max=" + r.maxOverlap.toFixed(3));
+  }
+
+  /* 2. Frame rate independence — the v1 bug ------------------------------ */
+  const base = {count: 500, gravSource: "fixed", gravAngle: 90, shakeImpulse: 0, ballSize: 1};
+  const a60 = simulate(4, 1 / 60, base);
+  const a120 = simulate(4, 1 / 120, base);
+  const a30 = simulate(4, 1 / 30, base);
+  const dev = (p, q) => {
+    let s = 0;
+    for (let i = 0; i < p.snap.x.length; i++) s += Math.hypot(p.snap.x[i] - q.snap.x[i], p.snap.y[i] - q.snap.y[i]);
+    return s / p.snap.x.length / H;
+  };
+  const d120 = dev(a60, a120), d30 = dev(a60, a30);
+  ok("60 Hz matches 120 Hz", d120 < 0.005, "mean drift " + (d120 * 100).toFixed(3) + "% of screen");
+  ok("60 Hz matches 30 Hz",  d30 < 0.02,  "mean drift " + (d30 * 100).toFixed(3) + "% of screen");
+
+  /* 2b. The pile must actually FALL, at every substep count --------------
+     A frozen simulation passes an overlap check perfectly and passes the
+     frame-rate check too, because both frame rates freeze identically. This
+     is the check that caught rest damping crushing gravity at 3+ substeps. */
+  for (const sb of [1, 2, 3, 4, 6, 8]) {
+    simulate(2.5, 1 / 60, {count: 400, substeps: sb, gravSource: "fixed", gravAngle: 90});
+    let sum = 0;
+    for (let i = 0; i < count; i++) sum += py[i];
+    const meanY = sum / count;
+    ok("falls at " + sb + " substep" + (sb > 1 ? "s" : ""), meanY > boxY0 + (boxY1 - boxY0) * 0.55,
+       "mean y " + (meanY / H * 100).toFixed(0) + "% down the box");
+  }
+
+  /* 2c. What is DRAWN must move smoothly, even when stepping does not ----
+     The accumulator gives a frame 0, 1 or 2 physics steps depending on where
+     the frame boundary falls — at 120 Hz with 2 substeps it alternated 0 and 2
+     — and drawing the raw state made the whole pit stutter even though the
+     simulation was perfectly regular. The renderer interpolates between the
+     last two states so the drawn position advances with real time instead.
+     Measured on one ball at constant velocity, where every frame must cover
+     the same distance. The residual tracks the frame-time jitter itself. */
+  for (const [hz, subs] of [[120, 2], [120, 3], [60, 2], [144, 2]]) {
+    simulate(0.2, 1 / 60, {count: 1, gravity: 0, gravSource: "fixed", substeps: subs,
+                           drag: 0, restSpeed: 0});
+    cfg.gravity = 0; cfg.gravSource = "fixed"; cfg.substeps = subs;
+    cfg.drag = 0; cfg.restSpeed = 0;
+    px[0] = W * 0.05; py[0] = H * 0.5; vx[0] = 90; vy[0] = 0;
+    const step = [];
+    let prev = null;
+    for (let f = 0; f < 240; f++) {
+      tick((1000 / hz + (rnd() - 0.5) * 1.6) / 1000);
+      render();
+      if (f > 20 && prev !== null) step.push(rx[0] - prev);
+      prev = rx[0];
+    }
+    const mean = step.reduce((a, b) => a + b, 0) / step.length;
+    const cv = Math.sqrt(step.reduce((a, b) => a + (b - mean) * (b - mean), 0) / step.length) / mean;
+    ok("smooth at " + hz + "Hz/" + subs + " sub", cv < 0.12,
+       "drawn motion varies " + (cv * 100).toFixed(1) + "% frame to frame");
+  }
+
+  /* 3. Friction holds a slope --------------------------------------------
+     Measured as the free-surface angle after the box is tilted 25 degrees. A
+     frictionless liquid ends up parallel to world horizontal, which is -25 in
+     box coordinates; a material with grip stops short of that.
+
+     Wall grip is pinned at 1 on purpose. With a slippery floor the whole mass
+     creeps along it no matter how much the balls grip each other, which hides
+     the particle friction completely — three earlier versions of this test
+     read "friction does nothing" for exactly that reason. */
+  const surfaceAngle = () => {
+    const BINS = 16, top = new Array(BINS).fill(1e9);
+    for (let i = 0; i < count; i++) {
+      const b = Math.min(BINS - 1, Math.max(0, Math.floor(px[i] / W * BINS)));
+      if (py[i] < top[b]) top[b] = py[i];
+    }
+    let n = 0, sx = 0, sy = 0, sxy = 0, sxx = 0;
+    for (let b = 0; b < BINS; b++) {
+      if (top[b] > 1e8) continue;
+      const x = (b + 0.5) / BINS * W;
+      n++; sx += x; sy += top[b]; sxy += x * top[b]; sxx += x * x;
+    }
+    return Math.atan((n * sxy - sx * sy) / (n * sxx - sx * sx)) * 180 / Math.PI;
+  };
+  const tiltTo = mu => {
+    // Every value this depends on is set explicitly. It used to inherit
+    // gravity from whatever ran before it, and the judder check leaves gravity
+    // at zero — which made the surface sit flat in both runs and read as
+    // "friction does nothing" for a third time.
+    simulate(5, 1 / 60, {count: 500, ballSize: 0.8, gravity: 1, gravSource: "fixed",
+      gravAngle: 90, slabDepth: 1, restSpeed: 0, bounce: 0, friction: mu,
+      wallFriction: 1, drag: 0.35, substeps: 2});
+    cfg.gravity = 1; cfg.gravSource = "fixed"; cfg.gravAngle = 65; cfg.gravZ = 0;
+    cfg.friction = mu; cfg.wallFriction = 1; cfg.restSpeed = 0;
+    cfg.bounce = 0; cfg.slabDepth = 1; cfg.drag = 0.35; cfg.substeps = 2;
+    for (let f = 0; f < 360; f++) tick(1 / 60);
+    return surfaceAngle();
+  };
+  const slickA = tiltTo(0), gripA = tiltTo(2);
+  ok("friction holds a slope", gripA - slickA > 2,
+     "surface " + slickA.toFixed(1) + " deg at mu=0 vs " + gripA.toFixed(1) +
+     " deg at mu=2 (a liquid reaches -25)");
+
+  /* 4. Depth 1 collapses to a plane ------------------------------------- */
+  simulate(2, 1 / 60, {slabDepth: 1, count: 400, gravSource: "fixed", gravAngle: 90});
+  let planar = 0;
+  for (let i = 0; i < count; i++) if (Math.abs(pz[i] - DZ * 0.5) > 1e-3 || vz[i] !== 0) planar++;
+  ok("depth 1 is planar", planar === 0, planar + " balls left the plane");
+
+  /* 5. Every preset survives a round trip -------------------------------- */
+  let rtBad = 0, rtName = "";
+  for (const name in PRESETS) {
+    const src = PRESETS[name];
+    for (const p of PARAMS) cfg[p.k] = (p.k in src) ? src[p.k] : p.d;
+    const s = JSON.parse(JSON.stringify(sparse()));
+    for (const p of PARAMS) cfg[p.k] = p.d;
+    loadSparse(s);
+    for (const p of PARAMS) {
+      const want = (p.k in src) ? src[p.k] : p.d;
+      if (cfg[p.k] !== want) { rtBad++; rtName = name + "." + p.k; }
+    }
+  }
+  ok("preset round trip", rtBad === 0, rtBad ? "first mismatch " + rtName : "all presets");
+
+  /* 5b. The renderer draws, and the shade ladder really is a ladder ------ */
+  applyPreset("Ball Pit");
+  spawn(600);
+  for (let f = 0; f < 90; f++) tick(1 / 60);
+
+  const meanLuma = () => {
+    const d = ctx.getImageData(0, 0, W, H).data;
+    let sum = 0, n = 0;
+    for (let i = 0; i < d.length; i += 4 * 11) { sum += (d[i] + d[i + 1] + d[i + 2]) / 3; n++; }
+    return sum / n;
+  };
+  render();
+  const withBalls = meanLuma();
+  const keep = count; count = 0; render(); const bare = meanLuma(); count = keep;
+  ok("renderer draws balls", withBalls > bare * 1.15,
+     "mean luma " + withBalls.toFixed(1) + " with balls vs " + bare.toFixed(1) + " backdrop only");
+
+  // Each rung of the ladder must be darker than the one before it, or depth
+  // and occlusion have nothing to select between.
+  orientSprites(cfg.lightAngle);
+  const rungLuma = [];
+  for (let sIdx = 0; sIdx < NSHADE; sIdx++) {
+    const c = sphereSprites[0][sIdx].getContext("2d").getImageData(0, 0, SPR, SPR).data;
+    let sum = 0, n = 0;
+    for (let i = 0; i < c.length; i += 4) {
+      if (c[i + 3] < 200) continue;
+      sum += (c[i] + c[i + 1] + c[i + 2]) / 3; n++;
+    }
+    rungLuma.push(n ? sum / n : 0);
+  }
+  let monotone = true;
+  for (let sIdx = 1; sIdx < rungLuma.length; sIdx++) if (rungLuma[sIdx] >= rungLuma[sIdx - 1]) monotone = false;
+  ok("shade ladder descends", monotone,
+     "lit rung " + rungLuma[0].toFixed(0) + " down to buried rung " + rungLuma[rungLuma.length - 1].toFixed(0));
+
+  // Matte and glow must not be the same picture.
+  cfg.renderMode = "matte"; render(); const matteL = meanLuma();
+  cfg.renderMode = "glow";  render(); const glowL = meanLuma();
+  cfg.renderMode = "matte";
+  ok("styles differ", Math.abs(matteL - glowL) > 2,
+     "matte luma " + matteL.toFixed(1) + " vs glow " + glowL.toFixed(1));
+
+  /* 6. Sprite ladder is complete ---------------------------------------- */
+  applyPreset("Ball Pit");
+  orientSprites(cfg.lightAngle);
+  const shaped = sphereSprites.length === ballColors.length &&
+                 sphereSprites.every(r => r.length === NSHADE);
+  ok("sprite ladder", shaped, sphereSprites.length + " colours x " + NSHADE + " shades");
+
+  count = savedCount;
+  spawn(cfg.count | 0);
+  const passed = out.filter(r => r.pass).length;
+  console.table(out);
+  console.log(passed + "/" + out.length + " checks passed");
+  return {passed, total: out.length, results: out};
+};
+
+/* ===========================================================================
+   14. Start
+   =========================================================================== */
 
 const gate = document.getElementById("gate");
-const note = document.getElementById("note");
 
 window.addEventListener("resize", resize);
 if (screen.orientation) screen.orientation.addEventListener("change", () => setTimeout(resize, 120));
 
+restore();
+buildColors();
 buildSprites();
 resize();
-spawn(cfg.count);
+spawn(cfg.count | 0);
+overlays();
+buildPresetList();
+buildChips();
+buildRows();
+noteEl.textContent = HINT;
 dimHandle();
-note.textContent = "Tilt to pour, shake to splash, drag to stir.";
 requestAnimationFrame(frame);
 
 document.getElementById("gate-go").addEventListener("click", async () => {
   const ok = await enableSensors();
   gate.classList.add("hidden");
-  try { await document.documentElement.requestFullscreen({ navigationUI: "hide" }); } catch (_) {}
+  try { await document.documentElement.requestFullscreen({navigationUI: "hide"}); } catch (_) {}
   try { wakeLock = await navigator.wakeLock.request("screen"); awakeBtn.classList.add("on"); } catch (_) {}
 
   setTimeout(() => {
     if (!sensorLive) {
-      note.textContent = ok
-        ? "No motion data coming through. Sensors need an HTTPS page — a file:// or http:// page will not get them. Drag on the screen to stir instead."
-        : "Motion permission was declined. Drag on the screen to stir instead.";
+      cfg.showSensors = true; overlays();
+      noteEl.textContent = ok
+        ? "No motion events are arriving — the readout top-left says why. Set Forces > Gravity from to Pointer or Orbit to tune without tilt."
+        : "Motion permission was declined. Set Forces > Gravity from to Pointer or Orbit, or drag to stir.";
     } else {
-      note.textContent = "Tilt to pour, shake to splash, drag to stir.";
+      noteEl.textContent = HINT;
     }
-  }, 1200);
+  }, 1500);
 });
+
+window.__sim = {cfg, PARAMS, PRESETS, simulate, tick, spawn, geometry, buildGrid, render, ctx,
+  sprites: () => ({canon: canonSprites, live: sphereSprites, shadow: shadowSprite, glow: glowSprites}),
+  steps: () => stepsLast,
+  state: () => ({count, W, H, DZ, baseR, px, py, pz, rx, ry, rz, vx, vy, vz, rad, nCount, frontN, occ, OCC_FULL})};
 </script>
 
 </body>
