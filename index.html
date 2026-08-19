@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#03060f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Liquid Ball Pit</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: #03060f;
+    overscroll-behavior: none;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    font: 400 14px/1.4 ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+    color: #cfe2ff;
+  }
+
+  #stage { display: block; width: 100%; height: 100%; }
+
+  /* ---- Start gate: needed for fullscreen, wake lock and iOS sensor permission ---- */
+  #gate {
+    position: fixed; inset: 0; z-index: 30;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 18px; padding: 32px;
+    background: radial-gradient(120% 90% at 50% 60%, #0b1a3d 0%, #03060f 70%);
+    text-align: center;
+  }
+  #gate h1 {
+    font: 300 30px/1.15 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .01em; color: #eaf3ff;
+  }
+  #gate p { max-width: 30ch; color: #7d97c4; font-size: 13px; }
+  #gate button {
+    margin-top: 8px; padding: 14px 34px; border: 0; border-radius: 999px;
+    background: linear-gradient(180deg, #4aa8ff, #1f56d8);
+    color: #fff; font: 600 15px/1 inherit; letter-spacing: .02em;
+    box-shadow: 0 0 34px rgba(60,150,255,.45);
+  }
+  #gate.hidden { display: none; }
+
+  /* ---- Controls ---- */
+  #handle {
+    position: fixed; z-index: 20;
+    left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+    width: 74px; height: 26px; border: 0; border-radius: 999px;
+    background: rgba(140,180,255,.10);
+    display: flex; align-items: center; justify-content: center;
+    opacity: .5; transition: opacity .3s;
+  }
+  #handle::after {
+    content: ""; width: 30px; height: 3px; border-radius: 2px;
+    background: #9dbcf0;
+  }
+  #handle.dim { opacity: .12; }
+
+  #panel {
+    position: fixed; z-index: 25; left: 0; right: 0; bottom: 0;
+    padding: 18px 20px calc(env(safe-area-inset-bottom, 0px) + 20px);
+    background: rgba(6, 12, 26, .88);
+    -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(120,165,255,.16);
+    border-radius: 20px 20px 0 0;
+    transform: translateY(105%);
+    transition: transform .32s cubic-bezier(.22,.9,.3,1);
+    max-height: 76vh; overflow-y: auto;
+  }
+  #panel.open { transform: translateY(0); }
+
+  .row { display: grid; grid-template-columns: 78px 1fr 44px; align-items: center; gap: 12px; margin-bottom: 13px; }
+  .row label { font-size: 12px; color: #85a2d2; letter-spacing: .02em; }
+  .row output { font-size: 12px; color: #d6e6ff; text-align: right; font-variant-numeric: tabular-nums; }
+
+  input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 26px; background: transparent;
+  }
+  input[type=range]::-webkit-slider-runnable-track {
+    height: 3px; border-radius: 2px; background: rgba(140,180,255,.22);
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 20px; height: 20px; margin-top: -8.5px; border-radius: 50%;
+    background: #6cb4ff; box-shadow: 0 0 12px rgba(80,160,255,.6);
+  }
+  input[type=range]::-moz-range-track { height: 3px; border-radius: 2px; background: rgba(140,180,255,.22); }
+  input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border: 0; border-radius: 50%; background: #6cb4ff; }
+
+  .buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .buttons button {
+    flex: 1 1 auto; min-width: 84px; padding: 11px 12px; border: 1px solid rgba(120,165,255,.2);
+    border-radius: 11px; background: rgba(90,150,255,.10); color: #cfe2ff;
+    font: 500 12px/1 inherit; letter-spacing: .02em;
+  }
+  .buttons button.on { background: rgba(90,150,255,.32); border-color: rgba(150,200,255,.5); color: #fff; }
+
+  #note { margin-top: 12px; font-size: 11px; color: #5c749c; line-height: 1.5; }
+  #fps { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); right: 12px; z-index: 15;
+         font-size: 11px; color: rgba(150,185,235,.4); font-variant-numeric: tabular-nums; display: none; }
+  #fps.show { display: block; }
+</style>
+</head>
+<body>
+
+<canvas id="stage"></canvas>
+<div id="fps"></div>
+
+<div id="gate">
+  <h1>Liquid Ball Pit</h1>
+  <p>Tilt the phone to pour the beads, shake to splash them, drag a finger to stir.</p>
+  <button id="gate-go">Start</button>
+</div>
+
+<button id="handle" aria-label="Show controls"></button>
+
+<div id="panel">
+  <div class="row"><label for="s-count">Balls</label><input id="s-count" type="range" min="150" max="2400" step="50"><output id="o-count"></output></div>
+  <div class="row"><label for="s-size">Size</label><input id="s-size" type="range" min="0.5" max="2.2" step="0.05"><output id="o-size"></output></div>
+  <div class="row"><label for="s-grav">Gravity</label><input id="s-grav" type="range" min="0" max="2.5" step="0.05"><output id="o-grav"></output></div>
+  <div class="row"><label for="s-bounce">Bounce</label><input id="s-bounce" type="range" min="0" max="0.85" step="0.01"><output id="o-bounce"></output></div>
+  <div class="row"><label for="s-visc">Viscosity</label><input id="s-visc" type="range" min="0" max="1" step="0.01"><output id="o-visc"></output></div>
+  <div class="row"><label for="s-trail">Trails</label><input id="s-trail" type="range" min="0" max="1" step="0.02"><output id="o-trail"></output></div>
+  <div class="row"><label for="s-glow">Glow</label><input id="s-glow" type="range" min="0.2" max="1.6" step="0.05"><output id="o-glow"></output></div>
+  <div class="row"><label for="s-hue">Hue</label><input id="s-hue" type="range" min="-40" max="60" step="1"><output id="o-hue"></output></div>
+
+  <div class="buttons">
+    <button id="b-reset">Refill</button>
+    <button id="b-pause">Freeze</button>
+    <button id="b-awake">Stay awake</button>
+    <button id="b-full">Fullscreen</button>
+    <button id="b-fps">FPS</button>
+  </div>
+  <p id="note"></p>
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================================
+   1. Configuration
+   ========================================================================= */
+
+const cfg = {
+  count:      600,   // number of balls
+  sizeScale:  1.0,   // multiplier on the derived base radius
+  gravity:    1.0,   // multiplier on device gravity
+  bounce:     0.30,  // wall restitution
+  viscosity:  0.55,  // 0 = bouncy ball pit, 1 = thick liquid
+  trail:      0.45,  // 1 = hard clear each frame, low = motion smear
+  glow:       1.0,   // additive sprite alpha
+  hue:        0,     // degrees of hue rotation off the blue base
+  paused:     false
+};
+
+const SUBSTEPS   = 2;    // physics substeps per rendered frame
+const ITERATIONS = 3;    // collision relaxation passes per substep
+const MAX_BALLS  = 2400;
+const LEVELS     = 14;   // pre-rendered colour steps (deep blue -> cyan-white)
+const SPRITE_EXT = 2.3;  // sprite half-width, in ball radii (the halo)
+
+/* =========================================================================
+   2. Canvas
+   ========================================================================= */
+
+const canvas = document.getElementById("stage");
+const ctx = canvas.getContext("2d", { alpha: false });
+
+let W = 0, H = 0, dpr = 1, baseR = 12, gravPx = 4000;
+
+function resize() {
+  const oldW = W, oldH = H;
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = Math.round(window.innerWidth  * dpr);
+  H = Math.round(window.innerHeight * dpr);
+  canvas.width = W; canvas.height = H;
+  canvas.style.width = window.innerWidth + "px";
+  canvas.style.height = window.innerHeight + "px";
+
+  // Gravity scaled to screen height so falls feel the same on any device.
+  gravPx = H * 0.45;
+
+  recomputeRadius();
+
+  // Rescale existing balls instead of dumping them on rotate.
+  if (oldW && oldH && count) {
+    const sx = W / oldW, sy = H / oldH;
+    for (let i = 0; i < count; i++) {
+      px[i] *= sx; py[i] *= sy;
+      ox[i] *= sx; oy[i] *= sy;
+    }
+  }
+  buildGrid();
+  paintBackdrop();
+}
+
+function recomputeRadius() {
+  // ~800 balls at scale 1.0 fill roughly the lower third of the screen.
+  const shortSide = Math.min(W, H);
+  baseR = (shortSide / 52) * cfg.sizeScale;
+  for (let i = 0; i < count; i++) rad[i] = baseR * radVar[i];
+}
+
+/* =========================================================================
+   3. Sprites — one pre-rendered bead per speed level
+   ========================================================================= */
+
+let sprites = [];
+
+function hueRotate(rgb, deg) {
+  // Cheap approximate hue rotation, good enough for a palette ramp.
+  const a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+  const m = [
+    0.213 + c * 0.787 - s * 0.213, 0.715 - c * 0.715 - s * 0.715, 0.072 - c * 0.072 + s * 0.928,
+    0.213 - c * 0.213 + s * 0.143, 0.715 + c * 0.285 + s * 0.140, 0.072 - c * 0.072 - s * 0.283,
+    0.213 - c * 0.213 - s * 0.787, 0.715 - c * 0.715 + s * 0.715, 0.072 + c * 0.928 + s * 0.072
+  ];
+  const out = [
+    rgb[0] * m[0] + rgb[1] * m[1] + rgb[2] * m[2],
+    rgb[0] * m[3] + rgb[1] * m[4] + rgb[2] * m[5],
+    rgb[0] * m[6] + rgb[1] * m[7] + rgb[2] * m[8]
+  ];
+  return out.map(v => Math.max(0, Math.min(255, Math.round(v))));
+}
+
+function mix(a, b, t) {
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+}
+
+function buildSprites() {
+  const S = 128, C = S / 2;
+  const slowBody = [22, 62, 200],  fastBody = [64, 210, 255];
+  const slowCore = [130, 185, 255], fastCore = [232, 250, 255];
+
+  sprites = [];
+  for (let l = 0; l < LEVELS; l++) {
+    const t = l / (LEVELS - 1);
+    const body = hueRotate(mix(slowBody, fastBody, t), cfg.hue);
+    const core = hueRotate(mix(slowCore, fastCore, t), cfg.hue);
+    const halo = hueRotate(mix([10, 30, 130], [20, 110, 200], t), cfg.hue);
+
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = S;
+    const g = cv.getContext("2d");
+    const grd = g.createRadialGradient(C, C, 0, C, C, C);
+
+    // Bead edge sits at 1/SPRITE_EXT of the sprite radius; beyond that is halo.
+    const edge = 1 / SPRITE_EXT;
+    grd.addColorStop(0.00, `rgba(${core[0]},${core[1]},${core[2]},0.98)`);
+    grd.addColorStop(0.16, `rgba(${body[0]},${body[1]},${body[2]},0.90)`);
+    grd.addColorStop(edge * 0.92, `rgba(${body[0]},${body[1]},${body[2]},0.46)`);
+    grd.addColorStop(edge, `rgba(${halo[0]},${halo[1]},${halo[2]},0.22)`);
+    grd.addColorStop(0.72, `rgba(${halo[0]},${halo[1]},${halo[2]},0.055)`);
+    grd.addColorStop(1.00, `rgba(${halo[0]},${halo[1]},${halo[2]},0)`);
+
+    g.fillStyle = grd;
+    g.fillRect(0, 0, S, S);
+    sprites.push(cv);
+  }
+}
+
+let backdrop = null;
+function paintBackdrop() {
+  backdrop = document.createElement("canvas");
+  backdrop.width = W; backdrop.height = H;
+  const g = backdrop.getContext("2d");
+  const grd = g.createRadialGradient(W * 0.5, H * 0.68, 0, W * 0.5, H * 0.68, Math.max(W, H) * 0.8);
+  grd.addColorStop(0, "#071129");
+  grd.addColorStop(1, "#02040c");
+  g.fillStyle = grd;
+  g.fillRect(0, 0, W, H);
+}
+
+/* =========================================================================
+   4. Particle state (structure of arrays, Verlet integration)
+   ========================================================================= */
+
+const px = new Float32Array(MAX_BALLS);   // position
+const py = new Float32Array(MAX_BALLS);
+const ox = new Float32Array(MAX_BALLS);   // previous position (implies velocity)
+const oy = new Float32Array(MAX_BALLS);
+const rad = new Float32Array(MAX_BALLS);  // actual radius in canvas px
+const radVar = new Float32Array(MAX_BALLS); // per-ball size variation, 0.75–1.25
+let count = 0;
+
+function spawn(n) {
+  count = Math.min(n, MAX_BALLS);
+  const cols = Math.max(1, Math.floor(W / (baseR * 2.1)));
+  for (let i = 0; i < count; i++) {
+    radVar[i] = 0.75 + Math.random() * 0.5;
+    rad[i] = baseR * radVar[i];
+    const c = i % cols, r = Math.floor(i / cols);
+    px[i] = (c + 0.5 + (Math.random() - 0.5) * 0.4) * (W / cols);
+    py[i] = H * 0.06 + r * baseR * 2.05;
+    ox[i] = px[i] - (Math.random() - 0.5) * 2;
+    oy[i] = py[i];
+  }
+}
+
+/* =========================================================================
+   5. Spatial hash — counting sort into flat arrays, no per-frame allocation
+   ========================================================================= */
+
+let cellSize = 1, cols = 1, rows = 1;
+let cellOf = new Int32Array(MAX_BALLS);
+let counts = null, starts = null, cursor = null, order = new Int32Array(MAX_BALLS);
+
+function buildGrid() {
+  cellSize = Math.max(4, baseR * 2.6);
+  cols = Math.max(1, Math.ceil(W / cellSize));
+  rows = Math.max(1, Math.ceil(H / cellSize));
+  const n = cols * rows;
+  counts = new Int32Array(n);
+  starts = new Int32Array(n + 1);
+  cursor = new Int32Array(n);
+}
+
+function hashParticles() {
+  counts.fill(0);
+  for (let i = 0; i < count; i++) {
+    let cx = (px[i] / cellSize) | 0;
+    let cy = (py[i] / cellSize) | 0;
+    if (cx < 0) cx = 0; else if (cx >= cols) cx = cols - 1;
+    if (cy < 0) cy = 0; else if (cy >= rows) cy = rows - 1;
+    const c = cy * cols + cx;
+    cellOf[i] = c;
+    counts[c]++;
+  }
+  let run = 0;
+  for (let c = 0; c < counts.length; c++) {
+    starts[c] = run;
+    cursor[c] = run;
+    run += counts[c];
+  }
+  starts[counts.length] = run;
+  for (let i = 0; i < count; i++) order[cursor[cellOf[i]]++] = i;
+}
+
+/* =========================================================================
+   6. Physics
+   ========================================================================= */
+
+let gx = 0, gy = 1;            // gravity direction in screen space, unit-ish
+let stirX = 0, stirY = 0, stirActive = false, stirVX = 0, stirVY = 0;
+let shakeImpulse = 0;
+
+function step(dt) {
+  const dt2 = dt * dt;
+  // Viscosity maps to velocity damping. Note this is applied per SUBSTEP
+  // (120x/sec), so the retained fraction has to stay very close to 1.
+  // visc 0 -> ~0.83 velocity retained per second; visc 1 -> ~0.32.
+  const damp = 1 - (0.0015 + cfg.viscosity * 0.008);
+  const ax = gx * gravPx * cfg.gravity;
+  const ay = gy * gravPx * cfg.gravity;
+  const maxStep = baseR * 0.85;
+
+  for (let i = 0; i < count; i++) {
+    let vx = (px[i] - ox[i]) * damp;
+    let vy = (py[i] - oy[i]) * damp;
+
+    if (shakeImpulse > 0) {
+      vx += (Math.random() - 0.5) * shakeImpulse;
+      vy += (Math.random() - 0.5) * shakeImpulse;
+    }
+
+    if (stirActive) {
+      const dx = px[i] - stirX, dy = py[i] - stirY;
+      const d2 = dx * dx + dy * dy;
+      const reach = baseR * 9;
+      if (d2 < reach * reach && d2 > 1) {
+        const f = (1 - Math.sqrt(d2) / reach);
+        vx += stirVX * f * 0.55 + (dx / Math.sqrt(d2)) * f * baseR * 0.16;
+        vy += stirVY * f * 0.55 + (dy / Math.sqrt(d2)) * f * baseR * 0.16;
+      }
+    }
+
+    ox[i] = px[i];
+    oy[i] = py[i];
+
+    let nx = vx + ax * dt2;
+    let ny = vy + ay * dt2;
+    // Clamp displacement so nothing tunnels through a neighbour.
+    if (nx > maxStep) nx = maxStep; else if (nx < -maxStep) nx = -maxStep;
+    if (ny > maxStep) ny = maxStep; else if (ny < -maxStep) ny = -maxStep;
+
+    px[i] += nx;
+    py[i] += ny;
+  }
+
+  shakeImpulse *= 0.6;
+  if (shakeImpulse < 0.05) shakeImpulse = 0;
+
+  for (let k = 0; k < ITERATIONS; k++) {
+    hashParticles();
+    collide();
+    walls();
+  }
+}
+
+function collide() {
+  const stiffness = 0.82;
+  for (let a = 0; a < count; a++) {
+    const c = cellOf[a];
+    const cx = c % cols, cy = (c / cols) | 0;
+    const ra = rad[a], ma = ra * ra;
+
+    for (let ny = cy - 1; ny <= cy + 1; ny++) {
+      if (ny < 0 || ny >= rows) continue;
+      const rowBase = ny * cols;
+      for (let nx = cx - 1; nx <= cx + 1; nx++) {
+        if (nx < 0 || nx >= cols) continue;
+        const cell = rowBase + nx;
+        const end = starts[cell + 1];
+        for (let k = starts[cell]; k < end; k++) {
+          const b = order[k];
+          if (b <= a) continue;
+
+          const dx = px[b] - px[a];
+          const dy = py[b] - py[a];
+          const minD = ra + rad[b];
+          const d2 = dx * dx + dy * dy;
+          if (d2 >= minD * minD || d2 < 1e-6) continue;
+
+          const d = Math.sqrt(d2);
+          const corr = (minD - d) * stiffness;
+          const inx = dx / d, iny = dy / d;
+          const mb = rad[b] * rad[b];
+          const tot = ma + mb;
+          const sa = corr * (mb / tot), sb = corr * (ma / tot);
+
+          px[a] -= inx * sa; py[a] -= iny * sa;
+          px[b] += inx * sb; py[b] += iny * sb;
+        }
+      }
+    }
+  }
+}
+
+function walls() {
+  const e = cfg.bounce;
+  const friction = 1 - cfg.viscosity * 0.06; // runs ITERATIONS x SUBSTEPS per frame
+  for (let i = 0; i < count; i++) {
+    const r = rad[i];
+    if (px[i] < r) {
+      const v = px[i] - ox[i];
+      px[i] = r; ox[i] = px[i] + v * e;
+      oy[i] = py[i] - (py[i] - oy[i]) * friction;
+    } else if (px[i] > W - r) {
+      const v = px[i] - ox[i];
+      px[i] = W - r; ox[i] = px[i] + v * e;
+      oy[i] = py[i] - (py[i] - oy[i]) * friction;
+    }
+    if (py[i] < r) {
+      const v = py[i] - oy[i];
+      py[i] = r; oy[i] = py[i] + v * e;
+      ox[i] = px[i] - (px[i] - ox[i]) * friction;
+    } else if (py[i] > H - r) {
+      const v = py[i] - oy[i];
+      py[i] = H - r; oy[i] = py[i] + v * e;
+      ox[i] = px[i] - (px[i] - ox[i]) * friction;
+    }
+  }
+}
+
+/* =========================================================================
+   7. Render
+   ========================================================================= */
+
+function render() {
+  ctx.globalCompositeOperation = "source-over";
+  ctx.globalAlpha = 1;
+
+  if (cfg.trail >= 0.99) {
+    ctx.drawImage(backdrop, 0, 0);
+  } else {
+    ctx.globalAlpha = cfg.trail;
+    ctx.drawImage(backdrop, 0, 0);
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.globalCompositeOperation = "lighter";
+  const speedNorm = 1 / (baseR * 0.42);
+
+  for (let i = 0; i < count; i++) {
+    const vx = px[i] - ox[i], vy = py[i] - oy[i];
+    const sp = Math.sqrt(vx * vx + vy * vy) * speedNorm;
+    let lvl = (sp * LEVELS) | 0;
+    if (lvl > LEVELS - 1) lvl = LEVELS - 1;
+
+    const r = rad[i], size = r * 2 * SPRITE_EXT;
+    ctx.globalAlpha = cfg.glow;
+    ctx.drawImage(sprites[lvl], px[i] - r * SPRITE_EXT, py[i] - r * SPRITE_EXT, size, size);
+  }
+
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = "source-over";
+}
+
+/* =========================================================================
+   8. Sensors — map device gravity into screen space
+   ========================================================================= */
+
+let sensorLive = false, lastMag = 9.81;
+
+function onMotion(e) {
+  const a = e.accelerationIncludingGravity;
+  if (!a || a.x === null) return;
+  sensorLive = true;
+
+  const ang = ((screen.orientation && screen.orientation.angle) || window.orientation || 0) * Math.PI / 180;
+  const c = Math.cos(ang), s = Math.sin(ang);
+
+  // Derivation: g_device = -acceleration. Screen axes rotate by -angle.
+  let sx = -a.x * c + a.y * s;
+  let sy =  a.x * s + a.y * c;
+
+  const mag = Math.hypot(sx, sy, a.z) || 9.81;
+  gx = sx / 9.81;
+  gy = sy / 9.81;
+
+  // Shake detection off the magnitude swing.
+  const delta = Math.abs(mag - lastMag);
+  lastMag = lastMag * 0.8 + mag * 0.2;
+  if (delta > 6) shakeImpulse = Math.min(baseR * 0.5, delta * 0.35);
+}
+
+async function enableSensors() {
+  try {
+    if (typeof DeviceMotionEvent !== "undefined" &&
+        typeof DeviceMotionEvent.requestPermission === "function") {
+      const res = await DeviceMotionEvent.requestPermission();
+      if (res !== "granted") return false;
+    }
+  } catch (_) { /* fall through — Android does not gate this */ }
+  window.addEventListener("devicemotion", onMotion, { passive: true });
+  return true;
+}
+
+/* =========================================================================
+   9. Touch — drag to stir
+   ========================================================================= */
+
+let lastTouchX = 0, lastTouchY = 0;
+
+canvas.addEventListener("pointerdown", e => {
+  stirActive = true;
+  stirX = e.clientX * dpr; stirY = e.clientY * dpr;
+  lastTouchX = stirX; lastTouchY = stirY;
+  stirVX = stirVY = 0;
+  dimHandle();
+});
+
+canvas.addEventListener("pointermove", e => {
+  if (!stirActive) return;
+  stirX = e.clientX * dpr; stirY = e.clientY * dpr;
+  stirVX = (stirX - lastTouchX) * 0.5;
+  stirVY = (stirY - lastTouchY) * 0.5;
+  lastTouchX = stirX; lastTouchY = stirY;
+});
+
+const endStir = () => { stirActive = false; };
+canvas.addEventListener("pointerup", endStir);
+canvas.addEventListener("pointercancel", endStir);
+canvas.addEventListener("pointerleave", endStir);
+
+/* =========================================================================
+   10. Loop
+   ========================================================================= */
+
+const FIXED_DT = 1 / 60 / SUBSTEPS;
+let frames = 0, fpsClock = performance.now();
+const fpsEl = document.getElementById("fps");
+
+function frame() {
+  if (!cfg.paused) {
+    for (let s = 0; s < SUBSTEPS; s++) step(FIXED_DT);
+  }
+  render();
+
+  frames++;
+  const now = performance.now();
+  if (now - fpsClock > 500) {
+    if (fpsEl.classList.contains("show")) {
+      fpsEl.textContent = Math.round(frames * 1000 / (now - fpsClock)) + " fps · " + count;
+    }
+    frames = 0; fpsClock = now;
+  }
+  requestAnimationFrame(frame);
+}
+
+/* =========================================================================
+   11. UI wiring
+   ========================================================================= */
+
+const panel = document.getElementById("panel");
+const handle = document.getElementById("handle");
+let dimTimer = null;
+
+function dimHandle() {
+  handle.classList.remove("dim");
+  clearTimeout(dimTimer);
+  dimTimer = setTimeout(() => handle.classList.add("dim"), 3000);
+}
+
+handle.addEventListener("click", () => {
+  panel.classList.toggle("open");
+  dimHandle();
+});
+
+canvas.addEventListener("pointerdown", () => panel.classList.remove("open"));
+
+function bind(id, key, fmt, after) {
+  const el = document.getElementById("s-" + id);
+  const out = document.getElementById("o-" + id);
+  el.value = cfg[key];
+  out.textContent = fmt(cfg[key]);
+  el.addEventListener("input", () => {
+    cfg[key] = parseFloat(el.value);
+    out.textContent = fmt(cfg[key]);
+    if (after) after();
+  });
+}
+
+const int1 = v => Math.round(v);
+const dec2 = v => v.toFixed(2);
+
+bind("count", "count", int1, () => {
+  const target = Math.round(cfg.count);
+  if (target > count) {
+    for (let i = count; i < target; i++) {
+      radVar[i] = 0.75 + Math.random() * 0.5;
+      rad[i] = baseR * radVar[i];
+      px[i] = Math.random() * W;
+      py[i] = Math.random() * H * 0.25;
+      ox[i] = px[i]; oy[i] = py[i];
+    }
+  }
+  count = target;
+});
+bind("size", "sizeScale", dec2, () => { recomputeRadius(); buildGrid(); });
+bind("grav", "gravity", dec2);
+bind("bounce", "bounce", dec2);
+bind("visc", "viscosity", dec2);
+bind("trail", "trail", dec2);
+bind("glow", "glow", dec2);
+bind("hue", "hue", v => int1(v) + "°", buildSprites);
+
+document.getElementById("b-reset").addEventListener("click", () => {
+  spawn(Math.round(cfg.count));
+});
+
+const pauseBtn = document.getElementById("b-pause");
+pauseBtn.addEventListener("click", () => {
+  cfg.paused = !cfg.paused;
+  pauseBtn.classList.toggle("on", cfg.paused);
+  pauseBtn.textContent = cfg.paused ? "Resume" : "Freeze";
+});
+
+const fullBtn = document.getElementById("b-full");
+fullBtn.addEventListener("click", async () => {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen({ navigationUI: "hide" });
+  } catch (_) {}
+});
+
+let wakeLock = null;
+const awakeBtn = document.getElementById("b-awake");
+awakeBtn.addEventListener("click", async () => {
+  try {
+    if (wakeLock) { await wakeLock.release(); wakeLock = null; awakeBtn.classList.remove("on"); }
+    else { wakeLock = await navigator.wakeLock.request("screen"); awakeBtn.classList.add("on"); }
+  } catch (_) { awakeBtn.textContent = "No wake lock"; }
+});
+document.addEventListener("visibilitychange", async () => {
+  if (wakeLock && document.visibilityState === "visible") {
+    try { wakeLock = await navigator.wakeLock.request("screen"); } catch (_) {}
+  }
+});
+
+const fpsBtn = document.getElementById("b-fps");
+fpsBtn.addEventListener("click", () => {
+  fpsEl.classList.toggle("show");
+  fpsBtn.classList.toggle("on", fpsEl.classList.contains("show"));
+});
+
+/* =========================================================================
+   12. Start
+   ========================================================================= */
+
+const gate = document.getElementById("gate");
+const note = document.getElementById("note");
+
+window.addEventListener("resize", resize);
+if (screen.orientation) screen.orientation.addEventListener("change", () => setTimeout(resize, 120));
+
+buildSprites();
+resize();
+spawn(cfg.count);
+dimHandle();
+note.textContent = "Tilt to pour, shake to splash, drag to stir.";
+requestAnimationFrame(frame);
+
+document.getElementById("gate-go").addEventListener("click", async () => {
+  const ok = await enableSensors();
+  gate.classList.add("hidden");
+  try { await document.documentElement.requestFullscreen({ navigationUI: "hide" }); } catch (_) {}
+  try { wakeLock = await navigator.wakeLock.request("screen"); awakeBtn.classList.add("on"); } catch (_) {}
+
+  setTimeout(() => {
+    if (!sensorLive) {
+      note.textContent = ok
+        ? "No motion data coming through. Sensors need an HTTPS page — a file:// or http:// page will not get them. Drag on the screen to stir instead."
+        : "Motion permission was declined. Drag on the screen to stir instead.";
+    } else {
+      note.textContent = "Tilt to pour, shake to splash, drag to stir.";
+    }
+  }, 1200);
+});
+</script>
+
+</body>
+</html>
